@@ -50,6 +50,10 @@ class InterestingPaths(object):
         current_node.node_type = node_type
 
     def is_interesting(self, path):
+        ( node, node_type ) = self.get_node_and_type_of_path(path)
+        return node_type == INTERESTING
+
+    def get_node_and_type_of_path(self, path):
         path_elements = split_path(path)
         current_node = self.root_node
         current_type = current_node.node_type
@@ -59,24 +63,17 @@ class InterestingPaths(object):
                 if current_node.node_type != INHERITED:
                     current_type = current_node.node_type
             else:
+                current_node = None
                 break
-        return current_type == INTERESTING
+        return ( current_node, current_type )
 
     def get_interesting_sub_directories(self, path):
-        path_elements = split_path(path)
-        current_node = self.root_node
-        current_type = current_node.node_type
-        for element in path_elements:
-            if element in current_node.children:
-                current_node = current_node.children[element]
-                if current_node.node_type != INHERITED:
-                    current_type = current_node.node_type
-            else:
-                if current_type == INTERESTING:
-                    return [ join(path_elements, '/') ]
-                else:
-                    return [ ]
-        return self.get_interesting_sub_directories_for_node(current_node)
+        ( node, node_type ) = self.get_node_and_type_of_path(path)
+        if node_type == INTERESTING:
+            return [ path ]
+        if node is None:
+            return [ ]
+        return self.get_interesting_sub_directories_for_node(node)
 
     def get_interesting_sub_directories_for_node(self, node):
         if node.node_type == INTERESTING:
