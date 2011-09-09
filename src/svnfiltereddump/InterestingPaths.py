@@ -1,6 +1,4 @@
 
-from string import join
-
 INHERITED = "INHERITED"
 BORING = "BORING"
 INTERESTING = "INTERESTING"

@@ -34,5 +34,6 @@ class InterestingPathsTests(TestCase):
         interesting_path.mark_path_as_boring('a/y')
         
         dirs = sorted(interesting_path.get_interesting_sub_directories('a/b'))
+        self.assertEqual(dirs, [ 'a/b/ca', 'a/b/cb' ])
 
-        self.assertEquals(dirs, [ 'a/b/ca', 'a/b/cb' ])
+        self.assertEqual([], interesting_path.get_interesting_sub_directories("a/b/c/x"))
