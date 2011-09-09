@@ -2,7 +2,4 @@
 
 export PYTHONPATH=`dirname $0`/test_helpers
 
-for test in `ls functional_tests/*.py`
-do
-    python $test
-done
+nosetests
