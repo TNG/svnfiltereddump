@@ -20,13 +20,15 @@ def chomp(x):
         return x
 
 def get_output_of_command(args):
-    process = Popen(args, stdout=PIPE )
+    process = Popen(args, stdout=PIPE, stderr=PIPE )
     output = chomp(process.stdout.read())
     process.stdout.close()
+    error = process.stderr.read()
+    process.stderr.close()
     status = os.waitpid(process.pid, 0)[1]
     if status != 0:
         cmd_str = join(args, ' ')
-        raise Exception("Command '%s' failed with status %d!" % ( cmd_str, status ) )
+        raise Exception("Command '%s' failed with status %d:\n%s" % ( cmd_str, status, error ) )
     return output
 
 
@@ -58,21 +60,27 @@ class TestEnvironment:
         check_call( [ 'svn', 'mkdir', '--parents', name ], stdout=self.dev_null)
 
     def mkdir_target(self, name):
-        url = self.target_repo_url + '/' name
-        check_call( [ 'svn', 'mkdir', '--parents', url ], stdout=self.dev_null)
+        url = self.target_repo_url + '/' + name
+        check_call( [ 'svn', 'mkdir', '--parents', '-m', 'mkdir', url ], stdout=self.dev_null)
 
-    def add_file(self, name, contents):
-        self.change_file(name, contents)
+    def add_file(self, name, content):
+        self.change_file(name, content)
         check_call( [ 'svn', 'add', name ], stdout=self.dev_null)
+
+    def copy_file(self, source, target):
+        check_call( [ 'svn', 'copy', source, target ], stdout=self.dev_null)
+
+    def rm_file(self, name):
+        check_call( [ 'svn', 'rm', name ], stdout=self.dev_null)
 
     def propset(self, path, key, value):
         os.chdir(self.source_repo_working_copy)
         check_call( [ 'svn', 'propset', key, value, path], stdout=self.dev_null)
 
-    def change_file(self, name, contents):
+    def change_file(self, name, content):
         os.chdir(self.source_repo_working_copy)
         fh = open(name, 'w')
-        fh.write(contents)
+        fh.write(content)
         fh.close()
 
     def commit(self, comment):
@@ -82,7 +90,18 @@ class TestEnvironment:
     def filter_repo(self, parameters):
         os.chdir(self.work_dir)
         # Temorary mock to test the tests
-        check_call('svnadmin dump ' + self.source_repo_path + ' 2>/dev/null | svndumpfilter include ' + join(parameters, ' ') + ' | svnadmin load --ignore-uuid ' + self.target_repo_path + ' 2>/dev/null', shell=True, stdout=self.dev_null)
+        process = Popen(
+            'svnadmin dump ' + self.source_repo_path + ' 2>/dev/null'
+            + ' | svndumpfilter include ' + join(parameters, ' ')
+            + ' | svnadmin load --ignore-uuid ' + self.target_repo_path + ' 2>/dev/null',
+            shell=True, stdout=self.dev_null, stderr=PIPE
+        )
+        output = process.stderr.read()
+        status = os.waitpid(process.pid, 0)[1]
+        if status == 0:
+            return None
+        else:
+            return output
 
     def is_existing_in_rev(self, path, rev):
         url = '%s/%s@%d' % ( self.target_repo_url, path, rev )
@@ -100,13 +119,13 @@ class TestEnvironment:
                 ( path, rev, output )
             )
 
-    def get_file_contens_in_rev(self, path, rev):
+    def get_file_content_in_rev(self, path, rev):
         url = '%s/%s@%d' % ( self.target_repo_url, path, rev )
         return get_output_of_command( [ 'svn', 'cat', url ] )
 
     def get_log_of_file_in_rev(self, path, rev):
         url = '%s/%s@%d' % ( self.target_repo_url, path, rev )
-        process = Popen( [ 'svn', 'log', url ], stdout=PIPE )
+        process = Popen( [ 'svn', 'log', url ], stdout=PIPE, stderr=PIPE)
         state = STATE_SEEN_NOTHING
         logs_list = [ ]
         revision = None
@@ -140,8 +159,14 @@ class TestEnvironment:
                 state = STATE_READING_COMMIT_COMMENT
             else:
                 raise Exception("%s line %d: Internal error - unknown state %d" % ( error_prefix, line_nr, state ) )
-        process.stdout.close();
-        return logs_list
+        process.stdout.close()
+        error = process.stderr.read()
+        process.stderr.close()
+        status = os.waitpid(process.pid, 0)[1]
+        if status == 0:
+            return ( logs_list, None )
+        else:
+            return ( logs_list, error )
 
     def get_property_in_rev(self, path, rev, key):
         url = '%s/%s@%d' % ( self.target_repo_url, path, rev )
@@ -149,7 +174,7 @@ class TestEnvironment:
         return chomp(output)
 
     def get_log_of_revision(self, rev):
-        output = get_output_of_command( [ 'svnlook', 'log', '-r', rev, self.target_repo_path ] )
+        output = get_output_of_command( [ 'svnlook', 'log', '-r', str(rev), self.target_repo_path ] )
         return chomp(output)
 
     def create_tmp_file(self, content):

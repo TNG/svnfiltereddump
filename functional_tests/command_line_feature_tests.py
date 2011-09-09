@@ -4,6 +4,7 @@ from subprocess import call
 
 from functional_test_environment import TestEnvironment
 
+
 class ComandLineFeatureTests(unittest.TestCase):
     
     def setUp(self):
@@ -11,6 +12,24 @@ class ComandLineFeatureTests(unittest.TestCase):
 
     def tearDown(self):
         self.env.destroy()
+
+    def filter_repo_and_check(self, params):
+        error = self.env.filter_repo(params)
+        if error is not None:
+            self.fail("Filter failed: " + error)
+
+    def check_log_of_file_in_rev(self, name, rev, exected_log):
+        ( parsed_log, error ) = self.env.get_log_of_file_in_rev(name, rev)
+        if error is None:
+            self.assertEquals(
+                parsed_log, exected_log,
+                "Validate log of file file %s in revision %d" % ( name, rev )
+            )
+        else:
+            self.fail(
+                "Failed to get log of file %s in revision %d with error:\n%s"
+                %  ( name, rev, error )
+            )
 
     def test_basic_call(self):
         env = self.env
@@ -25,14 +44,14 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'zzz')
         env.commit('c2')
 
-        env.filter_repo( [ 'a' ] )
+        self.filter_repo_and_check( [ 'a' ] )
 
         self.assertTrue(env.is_existing_in_rev('a', 1), 'Dir a was copied in rev 1')
         self.assertFalse(env.is_existing_in_rev('b', 1), 'Dir b was not copied in rev 1')
-        self.assertEquals(env.get_file_contens_in_rev('a/bla', 1), 'xxx', 'File a/bla correct in rev 1')
-        self.assertEquals(env.get_file_contens_in_rev('a/bla', 2), 'zzz', 'File a/bla correct in rev 2')
+        self.assertEquals(env.get_file_content_in_rev('a/bla', 1), 'xxx', 'File a/bla correct in rev 1')
+        self.assertEquals(env.get_file_content_in_rev('a/bla', 2), 'zzz', 'File a/bla correct in rev 2')
         self.assertEquals(env.get_property_in_rev('a/bla', 2, 'some_prop'), 'prop_value', 'File a/bla property correct in rev 2')
-        self.assertEquals(env.get_log_of_file_in_rev('a/bla', 2), [ [ 2, 'c2' ], [ 1, 'c1' ] ])
+        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
 
     def test_include(self):
         env = self.env
@@ -46,7 +65,7 @@ class ComandLineFeatureTests(unittest.TestCase):
 
         env.mkdir_target('x') # Rev 1 in target
 
-        env.filter_repo( [ 'x/a', 'x/foo' ] ) 
+        self.filter_repo_and_check( [ 'x/a', 'x/foo' ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 2), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 2), 'File foo was copied')
@@ -66,7 +85,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.mkdir_target('x') # Rev 1 in target
         include_file = env.create_tmp_file("x/a\n" + "x/foo\n")
 
-        env.filter_repo( [ '--include-file', include_file ] ) 
+        self.filter_repo_and_check( [ '--include-file', include_file ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 2), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 2), 'File foo was copied')
@@ -83,7 +102,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.add_file('x/bar', 'ZZZ')
         env.commit('c1')
 
-        env.filter_repo( [ 'x', '--exclude', 'x/b', '--exclude', 'x/bar' ] ) 
+        self.filter_repo_and_check( [ 'x', '--exclude', 'x/b', '--exclude', 'x/bar' ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 1), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 1), 'File foo was copied')
@@ -102,7 +121,7 @@ class ComandLineFeatureTests(unittest.TestCase):
 
         exclude_file = env.create_tmp_file("x/b\n" + "x/bar\n")
 
-        env.filter_repo( [ 'x', '--exclude-file', exclude_file ] ) 
+        self.filter_repo_and_check( [ 'x', '--exclude-file', exclude_file ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 1), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 1), 'File foo was copied')
@@ -122,10 +141,10 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c3')
 
-        env.filter_repo( [ 'a' ] )
+        self.filter_repo_and_check( [ 'a' ] )
 
-        self.assertEquals(env.get_log_of_file_in_rev('a/bla', 3), [ [ 3, 'c3' ], [ 1, 'c1' ] ])
-        self.assertEquals(env.get_log_of_revision(2), 'c2')
+        self.check_log_of_file_in_rev('a/bla', 3, [ [ 3, 'c3' ], [ 1, 'c1' ] ])
+        self.assertEquals(env.get_log_of_revision(2), 'This is an empty revision for padding.')
          
     def test_drop_empty_revs(self):
         env = self.env
@@ -140,10 +159,10 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c3')
 
-        env.filter_repo( [ '--drop-empty-revs', 'a' ] )
+        self.filter_repo_and_check( [ '--drop-empty-revs', 'a' ] )
 
-        self.assertEquals(env.get_log_of_file_in_rev('a/bla', 3), [ [ 3, 'c3' ], [ 1, 'c1' ] ])
-        self.assertEquals(env.get_log_of_revision(2), '') # Don't know yet what the behavior will be
+        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c1' ] ])
+        self.assertEquals(env.get_log_of_revision(2), 'c3')
 
     def test_renumber_revs(self):
         env = self.env
@@ -158,9 +177,9 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c3')
 
-        env.filter_repo( [ '--drop-empty-revs', '--renumber-revs', 'a' ] )
+        self.filter_repo_and_check( [ '--drop-empty-revs', '--renumber-revs', 'a' ] )
 
-        self.assertEquals(env.get_log_of_file_in_rev('a/bla', 2), [ [ 2, 'c3' ], [ 1, 'c1' ] ])
+        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c1' ] ])
 
     def test_start_rev(self):
         env = self.env
@@ -169,13 +188,13 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.add_file('a/bla', 'xxx')
         env.commit('c1')
         # Revision 2
-        env.change_file('b/bla', 'yyy')
+        env.change_file('a/bla', 'yyy')
         env.commit('c2')
 
-        env.filter_repo( [ '--start-rev', '2', 'a' ] )
+        self.filter_repo_and_check( [ '--start-rev', '2', 'a' ] )
 
-        self.assertEquals(env.get_file_contens_in_rev('a/bla', 2), 'yyy', 'File a/bla correct in rev 2')
-        self.assertEquals(env.get_log_of_file_in_rev('a/bla', 2), [ [ 2, 'c2' ] ])
+        self.assertEquals(env.get_file_content_in_rev('a/bla', 2), 'yyy', 'File a/bla correct in rev 2')
+        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ] ])
 
         
 if __name__ == '__main__':
