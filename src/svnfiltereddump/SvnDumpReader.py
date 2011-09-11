@@ -1,0 +1,102 @@
+
+from re import match
+from svnfiltereddump import SvnLump, ContentTin
+
+PROP_STATE_WANT_KEY = 'WANT_KEY'
+PROP_STATE_READ_KEY = 'READ_KEY'
+PROP_STATE_WANT_VALUE = 'WANT_VALUE'
+PROP_STATE_READ_VALUE = 'READ_VALUE'
+
+class SvnDumpReader(object):
+
+    def __init__(self, file_handle):
+        self.file_handle = file_handle
+        self.current_lump = None
+
+    def read_lump(self):
+        self._finish_last_lump()
+        self.current_lump = SvnLump()
+        self._read_headers()
+        if not self.current_lump.get_header_keys():
+            return None
+        self._read_properties()
+        self._create_content_tin()
+        return self.current_lump
+
+    def _finish_last_lump(self):
+        # Ensure that ContentTin of last lump gets depleted
+        if self.current_lump:
+            self.current_lump.content = None
+
+    def _read_headers(self):
+        fh = self.file_handle
+        header_count = 0
+        for line in fh:
+            if line == "\n":
+                if header_count > 0:
+                    return
+            else:
+                m = match("(.+): (.*)$", line)
+                if not m:
+                    raise Exception("Found broken header line:\n" + line)
+                self.current_lump.set_header(m.group(1), m.group(2))
+                header_count += 1
+        if header_count > 0:
+            raise Exception("Found End of file before end of headers!")
+
+    def _read_properties(self):
+        lump = self.current_lump
+        if not lump.has_header('Prop-content-length'):
+            return
+        expected_length = int(lump.get_header('Prop-content-length'))
+        actual_length = 0
+
+        state = PROP_STATE_WANT_KEY
+        key = ''
+        key_size = None
+        value = ''
+        value_size = None
+
+        for line in self.file_handle:
+            actual_length += len(line)
+            if state == PROP_STATE_WANT_KEY:
+                if line == 'PROPS-END\n':
+                    break
+                if line.startswith('K '):
+                    key_size = int(line[2:-1])
+                    state = PROP_STATE_READ_KEY
+                else:
+                    raise Exception("Needed key size line (K <number>) but got:\n" + line)
+            elif state == PROP_STATE_READ_KEY:
+                key += line
+                if len(key) > key_size:
+                    key = key[0:key_size]
+                if len(key) >= key_size:
+                    state = PROP_STATE_WANT_VALUE
+            elif state == PROP_STATE_WANT_VALUE:
+                if line.startswith('V '):
+                    value_size = int(line[2:-1])
+                    state = PROP_STATE_READ_VALUE
+                else:
+                    raise Exception("Needed key size line (V <number>) but got:\n" + line)
+            elif state == PROP_STATE_READ_VALUE:
+                value += line
+                if len(value) > value_size:
+                    value = value[0:value_size]
+                if len(key) >= value_size:
+                     lump.properties[key] = value
+                     state = PROP_STATE_WANT_KEY
+            else:
+                raise Exception("Unknown state: " + state)
+        if actual_length != expected_length:
+            raise Exception(
+                "PROPS section should be %d bytes long but was %d!"
+                % ( expected_length, actual_length )
+            )
+
+    def _create_content_tin(self):
+        lump = self.current_lump
+        if not lump.has_header('Text-content-length'):
+            return
+        size = int(lump.get_header('Text-content-length'))
+        lump.content = ContentTin(self.file_handle, size)

@@ -20,3 +20,5 @@ class SvnLumpTests(TestCase):
         self.assertEqual(lump.get_header('a_hdr'), 'y')
         self.assertEqual(lump.get_header('c_hdr'), 'z')
         self.assertEqual(lump.get_header('d_hdr'), 'x')
+        self.assertTrue(lump.has_header('a_hdr'))
+        self.assertFalse(lump.has_header('x_hdr'))

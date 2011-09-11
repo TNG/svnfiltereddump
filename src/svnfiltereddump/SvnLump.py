@@ -14,6 +14,9 @@ class SvnLump:
     def get_header(self, key):
         return self.headers[key]
 
+    def has_header(self, key):
+        return self.headers.has_key(key)
+
     def delete_header(self, key):
         del self.headers[key]
 
