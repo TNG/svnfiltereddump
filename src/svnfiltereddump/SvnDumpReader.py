@@ -3,11 +3,6 @@ from re import match
 from svnfiltereddump import SvnLump, ContentTin
 from string import join
 
-PROP_STATE_WANT_KEY = 'WANT_KEY'
-PROP_STATE_READ_KEY = 'READ_KEY'
-PROP_STATE_WANT_VALUE = 'WANT_VALUE'
-PROP_STATE_READ_VALUE = 'READ_VALUE'
-
 class SvnDumpReader(object):
 
     def __init__(self, file_handle):
