@@ -1,6 +1,7 @@
 
 from re import match
 from svnfiltereddump import SvnLump, ContentTin
+from string import join
 
 PROP_STATE_WANT_KEY = 'WANT_KEY'
 PROP_STATE_READ_KEY = 'READ_KEY'
@@ -51,48 +52,55 @@ class SvnDumpReader(object):
         expected_length = int(lump.get_header('Prop-content-length'))
         actual_length = 0
 
-        state = PROP_STATE_WANT_KEY
-        key = ''
-        key_size = None
-        value = ''
-        value_size = None
-
-        for line in self.file_handle:
-            actual_length += len(line)
-            if state == PROP_STATE_WANT_KEY:
-                if line == 'PROPS-END\n':
-                    break
-                if line.startswith('K '):
-                    key_size = int(line[2:-1])
-                    state = PROP_STATE_READ_KEY
-                else:
-                    raise Exception("Needed key size line (K <number>) but got:\n" + line)
-            elif state == PROP_STATE_READ_KEY:
-                key += line
-                if len(key) > key_size:
-                    key = key[0:key_size]
-                if len(key) >= key_size:
-                    state = PROP_STATE_WANT_VALUE
-            elif state == PROP_STATE_WANT_VALUE:
-                if line.startswith('V '):
-                    value_size = int(line[2:-1])
-                    state = PROP_STATE_READ_VALUE
-                else:
-                    raise Exception("Needed key size line (V <number>) but got:\n" + line)
-            elif state == PROP_STATE_READ_VALUE:
-                value += line
-                if len(value) > value_size:
-                    value = value[0:value_size]
-                if len(key) >= value_size:
-                     lump.properties[key] = value
-                     state = PROP_STATE_WANT_KEY
-            else:
-                raise Exception("Unknown state: " + state)
+        while True:
+            ( key, key_length ) = self._read_prop_key_and_length()
+            actual_length += key_length
+            if key is None:
+                break;
+            ( value, value_length ) = self._read_prop_value_and_length()
+            actual_length += value_length
+            lump.properties[key] = value
         if actual_length != expected_length:
             raise Exception(
                 "PROPS section should be %d bytes long but was %d!"
                 % ( expected_length, actual_length )
             )
+
+    def _read_prop_key_and_length(self):
+        fh = self.file_handle
+        line = fh.readline()
+        length = len(line)
+        if line == 'PROPS-END\n':
+            return ( None, length )
+        if not line.startswith('K '):
+            raise Exception("Needed key size line (K <number>) but got:\n" + line)
+        size = int(line[2:-1])
+        ( key, key_length ) = self._read_field_of_given_size_and_length(size)
+        length += key_length
+        return ( key, length )
+        
+    def _read_prop_value_and_length(self):
+        fh = self.file_handle
+        line = fh.readline()
+        length = len(line)
+        if not line.startswith('V '):
+            raise Exception("Needed value size line (V <number>) but got:\n" + line)
+        size = int(line[2:-1])
+        ( value, value_length ) = self._read_field_of_given_size_and_length(size)
+        length += value_length
+        return ( value, length )
+
+    def _read_field_of_given_size_and_length(self, size):
+        lines = [ ]
+        length = 0
+        for line in  self.file_handle:
+            lines.append(line)
+            length += len(line)
+            if length == size+1:
+                return ( join(lines, '')[0:-1], length )
+            elif length > size+1:
+                raise Exception("Field length did not match expected size!")
+        raise Exception("Reached end-of-file while reading field!")
 
     def _create_content_tin(self):
         lump = self.current_lump
