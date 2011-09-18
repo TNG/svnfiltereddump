@@ -9,6 +9,15 @@ class PathNode(object):
         self.node_type = node_type
         self.path = path
 
+    def add_child(self, name):
+        if self.path:
+            path = self.path + '/' + name
+        else:
+            path = name
+        child = PathNode(path)
+        self.children[name] = child
+        return child
+
     def __str__(self):
         return "NODE(%s) -> %s" % ( self.node_type, self.children )
 
@@ -37,12 +46,7 @@ class InterestingPaths(object):
             if element in current_node.children:
                 current_node = current_node.children[element]
             else:
-                new_path = element
-                if current_node.path:
-                    new_path = current_node.path + '/' + element
-                new_node = PathNode(new_path)
-                current_node.children[element] = new_node
-                current_node = new_node
+                current_node = current_node.add_child(element)
         if current_node.node_type != INHERITED or current_node.children:
             raise Exception("path inconsistent: " + path)
         current_node.node_type = node_type
