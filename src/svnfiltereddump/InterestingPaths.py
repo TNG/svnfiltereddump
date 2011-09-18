@@ -3,7 +3,7 @@ INHERITED = "INHERITED"
 BORING = "BORING"
 INTERESTING = "INTERESTING"
 
-class PathNode(object):
+class _PathNode(object):
     def __init__(self, path, node_type=INHERITED):
         self.children = { }
         self.node_type = node_type
@@ -14,7 +14,7 @@ class PathNode(object):
             path = self.path + '/' + name
         else:
             path = name
-        child = PathNode(path)
+        child = _PathNode(path)
         self.children[name] = child
         return child
 
@@ -31,7 +31,7 @@ def split_path(path):
 class InterestingPaths(object):
 
     def __init__(self):
-        self.root_node = PathNode(None)
+        self.root_node = _PathNode(None)
 
     def mark_path_as_interesting(self, path):
         self.mark_path_as_type(path, INTERESTING)
