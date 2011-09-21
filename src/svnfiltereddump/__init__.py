@@ -3,6 +3,7 @@ from ContentTin import ContentTin
 from SvnLump import SvnLump
 from SvnDumpReader import SvnDumpReader
 from SvnDumpWriter import SvnDumpWriter
+from SvnRepository import SvnRepository
 from CheckedCommandFileHandle import CheckedCommandFileHandle
 from Config import Config
 from RevisionMapper import RevisionMapper

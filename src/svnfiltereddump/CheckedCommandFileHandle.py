@@ -12,16 +12,16 @@
 
 from fcntl import fcntl, F_GETFL, F_SETFL
 from os import waitpid, O_NONBLOCK
-import sys
+from sys import stderr
 from subprocess import Popen, check_call, PIPE, STDOUT
 from string import join
 from errno import EAGAIN
 
 class CheckedCommandFileHandle(object):
 
-    def __init__(self, args, stderr=sys.stderr):
+    def __init__(self, args, error_fh=stderr):
         self.args = args
-        self.stderr = stderr
+        self.error_fh = error_fh
         self.process = Popen(args, stdout=PIPE, stderr=PIPE)
         self._make_stderr_non_blocking()
         self.status_ok = True
@@ -65,12 +65,12 @@ class CheckedCommandFileHandle(object):
         if not error:
             return
         if self.status_ok:
-            self.stderr.write(
+            self.error_fh.write(
                 "Output of command '%s' on STDERR:\n"
                 % ( join(self.args) )
             )
             self.status_ok = False
-        self.stderr.write(error)
+        self.error_fh.write(error)
 
     def close(self):
         p = self.process
