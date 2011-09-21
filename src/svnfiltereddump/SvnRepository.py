@@ -7,7 +7,7 @@ class SvnRepository(object):
     def __init__(self, path):
         self.path = path
 
-    def get_changes_of_revision_by_type(self, rev):
+    def get_changed_paths_by_change_type(self, rev):
         changes = { }
         with CheckedCommandFileHandle([ 'svnlook', 'changed', '-r', str(rev), self.path ]) as fh:
             for line in fh:
