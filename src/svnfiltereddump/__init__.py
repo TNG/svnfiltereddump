@@ -7,3 +7,4 @@ from SvnRepository import SvnRepository
 from CheckedCommandFileHandle import CheckedCommandFileHandle
 from Config import Config
 from RevisionMapper import RevisionMapper
+from RevisionAnalyser import RevisionAnalyser, STRATEGY_IGNORE, STRATEGY_SYNTHETIC_DELETES, STRATEGY_DUMP_SCAN
