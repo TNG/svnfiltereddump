@@ -6,9 +6,11 @@ class ContentTin:
 
     chunk_size = 1024**2
 
-    def __init__(self, fh, size):
+    def __init__(self, fh, size, md5sum):
         self.fh = fh
+        self.size = size
         self.remaining_bytes = size
+        self.md5sum = md5sum
         self.used = False
 
     def __enter__(self):

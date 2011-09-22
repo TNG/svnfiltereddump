@@ -80,7 +80,7 @@ PROPS-END
         lump.set_header('Text-content-sha1', '9063a9f0e032b6239403b719cbbba56ac4e4e45f')
         lump.set_header('Content-length', 2)
         content_fh = StringIO("y\n")
-        lump.content = ContentTin(content_fh, 2)
+        lump.content = ContentTin(content_fh, 2, '009520053b00386d1173f3988c55d192')
         
         self.writer.write_lump(lump)
 
@@ -107,7 +107,7 @@ y
         lump.set_header('Text-content-length', 16)
         lump.properties['blub'] = "XXX"
         content_fh = StringIO("fsdfa\nfgasdfgsd\n")
-        lump.content = ContentTin(content_fh, 16)
+        lump.content = ContentTin(content_fh, 16, 'FAKEMD5SUM')
 
         self.writer.write_lump(lump)
 
