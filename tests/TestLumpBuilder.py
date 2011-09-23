@@ -71,3 +71,33 @@ class SvnLumpTests(TestCase):
         self.assertEqual(lump.get_header('Node-kind'), 'dir')
         self.assertEqual(lump.get_header('Node-action'), 'add')
         self.assertEqual(lump.properties, { 'a2': 'y1', 'b2': 'y2' } )
+
+    def test_clone_change_lump_from_add_lump(self):
+        sample_lump = SvnLump()
+        sample_lump.set_header('Node-path', 'a/b/c')
+        sample_lump.set_header('Node-kind', 'file')
+        sample_lump.set_header('Node-action', 'add')
+        sample_lump.set_header('Text-content-length', '3')
+        sample_lump.set_header('Text-content-md5', 'FAKESUM')
+        sample_lump.properties =  { 'a': 'x1', 'b': 'x2' }
+        sample_fh = StringIO("abcXXX")
+        sample_tin = ContentTin(sample_fh, 3, 'FAKESUM')
+        sample_lump.content = sample_tin
+
+        lump = self.builder.change_lump_from_add_lump(sample_lump)
+
+        self.assertEqual(
+            lump.get_header_keys(),
+            [ 'Node-path', 'Node-action', 'Text-content-length', 'Text-content-md5' ]
+        )
+        self.assertEqual(lump.get_header('Node-path'), 'a/b/c')
+        self.assertEqual(lump.get_header('Node-action'), 'change')
+        self.assertEqual(lump.get_header('Text-content-length'), '3')
+        self.assertEqual(lump.get_header('Text-content-md5'), 'FAKESUM')
+        self.assertEqual(lump.properties, { 'a': 'x1', 'b': 'x2' } )
+        fh = StringIO()
+        lump.content.empty_to(fh)
+        fh.seek(0)
+        self.assertEqual(fh.read(), 'abc')
+        dummy_fh = StringIO()
+        self.assertRaises(Exception, sample_lump.content.empty_to, dummy_fh)

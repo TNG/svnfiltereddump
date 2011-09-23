@@ -1,5 +1,7 @@
 
 from os.path import normpath
+from copy import copy
+
 from SvnLump import SvnLump
 from SvnRepository import SvnRepository
 
@@ -37,4 +39,10 @@ class LumpBuilder(object):
             lump.set_header('Text-content-md5', tin.md5sum)
 
         lump.properties = repo.get_properties_of_path(path, rev)
+        return lump
+
+    def change_lump_from_add_lump(self, sample_lump):
+        lump = copy(sample_lump)
+        lump.set_header('Node-action', 'change')
+        lump.delete_header('Node-kind')
         return lump
