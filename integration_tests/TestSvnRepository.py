@@ -144,3 +144,10 @@ Node-action: delete
 
 
 """)
+
+    def test_get_tree_for_path(self):
+        self.assertEqual(
+            self.repo.get_tree_for_path('a', 3),
+            [ "a/", "a/bla2", "a/x1", "a/x2" ]
+        )
+

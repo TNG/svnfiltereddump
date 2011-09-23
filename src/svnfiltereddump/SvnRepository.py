@@ -97,3 +97,16 @@ class SvnRepository(object):
 
     def get_dump_file_handle_for_revision(self, rev):
         return CheckedCommandFileHandle([ 'svnadmin', 'dump', '--incremental', '-r', str(rev), self.path ])
+
+    def get_tree_for_path(self, path, rev):
+        args = [ 'svnlook', 'tree', '--full-paths', '-r', str(rev), self.path, path]
+        list = [ ]
+        with CheckedCommandFileHandle(args) as fh:
+            for line in fh:
+                if line[-1:] != "\n":
+                    raise Exception(
+                        "Line read from '%s' has no newline. Truncated?"
+                        % ( join(args, ' ') )
+                    )
+                list.append(line[:-1]) 
+        return list
