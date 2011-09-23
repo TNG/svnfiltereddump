@@ -21,8 +21,8 @@ class SvnDumpReader(object):
 
     def _finish_last_lump(self):
         # Ensure that ContentTin of last lump gets depleted
-        if self.current_lump:
-            self.current_lump.content = None
+        if self.current_lump and self.current_lump.content:
+            self.current_lump.content.discard()
 
     def _read_headers(self):
         fh = self.file_handle

@@ -52,6 +52,8 @@ class SvnRepository(object):
         return ContentTin(fh, size, md5sum)
 
     def get_properties_of_path(self, path, rev):
+        if path[-1:] == '/':
+            path = path[:-1]
         property_list = [ ]
         rev_string = str(rev)
         with CheckedCommandFileHandle([ 'svnlook', 'pl', '-r', rev_string, self.path, path]) as fh:

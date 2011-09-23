@@ -25,11 +25,16 @@ class ContentTinTests(TestCase):
 
         self.out_fh.seek(0)
         self.assertEqual(self.out_fh.read(), 'YYY')
+
+    def test_discarded_tin(self):
+        self.fh.read(3)
+        tin = ContentTin(self.fh, 3, 'MD5SUM')
+        tin.discard()
+        self.assertEqual(self.fh.read(), 'zzz')
   
     def test_discard_tin(self):
         with ContentTin(self.fh, 3, 'MD5SUM') as ct:
             pass
-
         self.assertEqual(self.fh.tell(), 3)
 
 

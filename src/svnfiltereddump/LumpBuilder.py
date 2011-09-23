@@ -15,34 +15,33 @@ class LumpBuilder(object):
         lump.set_header('Node-action', 'delete')
         return lump
 
-    def add_path_from_source_repository(self, path, rev):
+    def add_path_from_source_repository(self, kind, path, from_path, from_rev):
+        assert kind == 'file' or kind =='dir'
+
         path = normpath(path)
         repo = self.source_repository
         lump = SvnLump()
 
         lump.set_header('Node-path', path)
-
-        node_type = repo.get_type_of_path(path, rev)
-        if node_type is None:
-            raise Exception(
-                "Trying to copy %s, revision %d from source repository, but it does not exist!"
-                % ( path, rev )
-            )
-        lump.set_header('Node-kind', node_type)
-
+        lump.set_header('Node-kind', kind)
         lump.set_header('Node-action', 'add')
 
-        if node_type == 'file':
-            tin = repo.get_tin_for_file(path, rev)
+        if kind == 'file':
+            tin = repo.get_tin_for_file(from_path, from_rev)
             lump.content = tin
             lump.set_header('Text-content-length', str(tin.size))
             lump.set_header('Text-content-md5', tin.md5sum)
 
-        lump.properties = repo.get_properties_of_path(path, rev)
+        lump.properties = repo.get_properties_of_path(from_path, from_rev)
         return lump
 
     def change_lump_from_add_lump(self, sample_lump):
         lump = copy(sample_lump)
         lump.set_header('Node-action', 'change')
-        lump.delete_header('Node-kind')
+        for header_name in [
+            'Node-kind', 'Node-copyfrom-path', 'Node-copyfrom-rev',
+            'Text-copy-source-md5', 'Text-copy-source-sha1'
+        ]:
+            if lump.has_header(header_name):
+                lump.delete_header(header_name)
         return lump

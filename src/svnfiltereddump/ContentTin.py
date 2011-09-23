@@ -31,3 +31,7 @@ class ContentTin:
             self.remaining_bytes -= len(input_chunk)
             out_fh.write(input_chunk)
         self.used = True
+
+    def discard(self):
+        if not self.used:
+            self.empty_to()

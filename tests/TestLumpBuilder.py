@@ -14,6 +14,8 @@ class SvnRepositoryMock(object):
             assert False
 
     def get_properties_of_path(self, path, rev):
+        if path[-1:] == '/':
+            path = path[:-1]
         if path == 'file/in/source/repo_rev17' and rev == 17:
             return { 'a': 'x1', 'b': 'x2' }
         elif path == 'dir/in/source/repo_rev2' and rev == 2:
@@ -22,6 +24,8 @@ class SvnRepositoryMock(object):
             assert False
 
     def get_type_of_path(self, path, rev):
+        if path[-1:] == '/':
+            path = path[:-1]
         if path == 'file/in/source/repo_rev17' and rev == 17:
             return 'file'
         elif path == 'dir/in/source/repo_rev2' and rev == 2:
@@ -43,13 +47,13 @@ class SvnLumpTests(TestCase):
         self.assertEqual(lump.get_header('Node-action'), 'delete')
 
     def test_add_file_from_source_repo(self):
-        lump = self.builder.add_path_from_source_repository('file/in/source/repo_rev17', 17)
+        lump = self.builder.add_path_from_source_repository('file', 'a/b', 'file/in/source/repo_rev17', 17)
         
         self.assertEqual(
             lump.get_header_keys(),
             [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length', 'Text-content-md5' ]
         )
-        self.assertEqual(lump.get_header('Node-path'), 'file/in/source/repo_rev17')
+        self.assertEqual(lump.get_header('Node-path'), 'a/b')
         self.assertEqual(lump.get_header('Node-kind'), 'file')
         self.assertEqual(lump.get_header('Node-action'), 'add')
         self.assertEqual(lump.get_header('Text-content-length'), '3')
@@ -61,13 +65,13 @@ class SvnLumpTests(TestCase):
         self.assertEqual(fh.read(), 'xxx')
 
     def test_add_dir_from_source_repo(self):
-        lump = self.builder.add_path_from_source_repository('dir/in/source/repo_rev2/', 2)
+        lump = self.builder.add_path_from_source_repository('dir', 'a/b', 'dir/in/source/repo_rev2/', 2)
         
         self.assertEqual(
             lump.get_header_keys(),
             [ 'Node-path', 'Node-kind', 'Node-action' ]
         )
-        self.assertEqual(lump.get_header('Node-path'), 'dir/in/source/repo_rev2')
+        self.assertEqual(lump.get_header('Node-path'), 'a/b')
         self.assertEqual(lump.get_header('Node-kind'), 'dir')
         self.assertEqual(lump.get_header('Node-action'), 'add')
         self.assertEqual(lump.properties, { 'a2': 'y1', 'b2': 'y2' } )
@@ -79,6 +83,8 @@ class SvnLumpTests(TestCase):
         sample_lump.set_header('Node-action', 'add')
         sample_lump.set_header('Text-content-length', '3')
         sample_lump.set_header('Text-content-md5', 'FAKESUM')
+        sample_lump.set_header('Node-copyfrom-path', 'blubber')
+        sample_lump.set_header('Node-copyfrom-rev', '2')
         sample_lump.properties =  { 'a': 'x1', 'b': 'x2' }
         sample_fh = StringIO("abcXXX")
         sample_tin = ContentTin(sample_fh, 3, 'FAKESUM')
