@@ -94,3 +94,6 @@ class SvnRepository(object):
             return 'dir'
         else:
             return 'file'
+
+    def get_dump_file_handle_for_revision(self, rev):
+        return CheckedCommandFileHandle([ 'svnadmin', 'dump', '--incremental', '-r', str(rev), self.path ])

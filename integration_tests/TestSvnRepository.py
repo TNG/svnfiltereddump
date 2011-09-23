@@ -1,6 +1,8 @@
 
 import unittest
+import re
 from StringIO import StringIO
+
 from svn_repo_test_environment import TestEnvironment
 
 from svnfiltereddump import SvnRepository
@@ -84,3 +86,61 @@ class TestSvnRepository(unittest.TestCase):
             self.repo.get_type_of_path('b/bogus', 2),
             None
         )
+
+    def test_get_dump_file_handle_for_revision(self):
+        fh = self.repo.get_dump_file_handle_for_revision(3)
+        dump = fh.read()
+        normalzied_dump = re.sub('UUID: \S+', 'UUID: XXX',
+                          re.sub('svn:date\nV 27\n\S+', 'svn:date\nV 27\nYYY',
+                          dump))
+        self.assertEqual(normalzied_dump, """SVN-fs-dump-format-version: 2
+
+UUID: XXX
+
+Revision-number: 3
+Prop-content-length: 104
+Content-length: 104
+
+K 7
+svn:log
+V 2
+c3
+K 10
+svn:author
+V 8
+wilhelmh
+K 8
+svn:date
+V 27
+YYY
+PROPS-END
+
+Node-path: a/x1
+Node-kind: file
+Node-action: add
+Prop-content-length: 10
+Text-content-length: 6
+Text-content-md5: cde333fcdaa0fbf09280e457333d72fd
+Text-content-sha1: 9558e4c4678259123b0553229c304db1a2ed4754
+Content-length: 16
+
+PROPS-END
+x11111
+
+Node-path: a/x2
+Node-kind: file
+Node-action: add
+Prop-content-length: 10
+Text-content-length: 6
+Text-content-md5: 56a20ee450b0936c3a976dcdaddb2dd1
+Text-content-sha1: e1b9077d3220006a05f7e740c6ce88bd242a0dfd
+Content-length: 16
+
+PROPS-END
+x22222
+
+Node-path: a/bla
+Node-action: delete
+
+
+""")
