@@ -145,11 +145,12 @@ Node-action: delete
 
 """)
 
-    def test_get_tree_for_path(self):
-        self.assertEqual(
-            self.repo.get_tree_for_path('a', 3),
-            [ "a/", "a/bla2", "a/x1", "a/x2" ]
-        )
+    def test_get_tree_handle_for_path(self):
+        list = [ ]
+        with self.repo.get_tree_handle_for_path('a', 3) as tree_handle:
+            for item in tree_handle:
+                list.append(item)
+        self.assertEqual(list, [ "a/", "a/bla2", "a/x1", "a/x2" ])
 
     def test_get_revision_info(self):
         info = self.repo.get_revision_info(3)

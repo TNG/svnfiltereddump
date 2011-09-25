@@ -89,17 +89,18 @@ class DumpFilter(object):
             self._write(new_lump)
             return
 
-        paths_top_copy = self.source_repository.get_tree_for_path(from_path, from_rev)
         if path[-1:] != '/':
             path += '/'
-        for from_sub_path in paths_top_copy:
-            if from_sub_path[-1:] == '/':
-                kind = 'dir'
-            else:
-                kind = 'file'
-            sub_path = path + from_sub_path[len(from_path):]
-            new_lump = self.lump_builder.add_path_from_source_repository(kind, sub_path, from_sub_path, from_rev)
-            self._write(new_lump)
+        with self.source_repository.get_tree_handle_for_path(from_path, from_rev) as tree_handle:
+            for from_sub_path in tree_handle:
+                if from_sub_path[-1:] == '/':
+                    kind = 'dir'
+                    from_sub_path = from_sub_path[:-1]
+                else:
+                    kind = 'file'
+                sub_path = path + from_sub_path[len(from_path):]
+                new_lump = self.lump_builder.add_path_from_source_repository(kind, sub_path, from_sub_path, from_rev)
+                self._write(new_lump)
 
     def _process_delete_lump(self, lump):
         path = lump.get_header('Node-path')

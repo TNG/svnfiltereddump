@@ -184,6 +184,22 @@ Node-action: delete
 
 """
 
+class FakeIterator(object):
+    def __init__(self, items):
+        self.items = items
+    def __iter__(self):
+        return self
+    def next(self):
+        if len(self.items):
+            next_item = self.items[0]
+            self.items = self.items[1:]
+            return next_item
+        else:
+            raise StopIteration()
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, trace):
+        pass
 
 class SvnRepositoryMock(object):
     def __init__(self):
@@ -214,10 +230,10 @@ class SvnRepositoryMock(object):
             return 'dir'
         return None
 
-    def get_tree_for_path(self, path, rev):
+    def get_tree_handle_for_path(self, path, rev):
         if path[-1:] == '/':
             path = path[:-1]
-        return self.tree_by_path_and_revision[path][rev]
+        return FakeIterator(self.tree_by_path_and_revision[path][rev])
 
     def get_dump_file_handle_for_revision(self, rev):
         return StringIO(self.dumps_by_revision[rev])

@@ -14,6 +14,28 @@ class RevisionInfo(object):
         self.date = date
         self.log_message = log_message
 
+class TreeHandle(object):
+    def __init__(self, file_handle, command):
+        self.file_handle = file_handle
+        self.command = command
+    def __iter__(self):
+        return self
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, trace):
+        self.file_handle = None
+    def next(self):
+        line = self.file_handle.readline()
+        if not line:
+            raise StopIteration()
+        if line[-1:] != "\n":
+            raise Exception(
+                "Line read from '%s' ('%s') has no newline. Truncated?"
+                % ( self.command, line )
+            )
+        return line[:-1]
+
+
 class SvnRepository(object):
 
     chunk_size = 1024**2
@@ -107,18 +129,12 @@ class SvnRepository(object):
     def get_dump_file_handle_for_revision(self, rev):
         return CheckedCommandFileHandle([ 'svnadmin', 'dump', '--incremental', '-r', str(rev), self.path ])
 
-    def get_tree_for_path(self, path, rev):
+    def get_tree_handle_for_path(self, path, rev):
         args = [ 'svnlook', 'tree', '--full-paths', '-r', str(rev), self.path, path]
         list = [ ]
-        with CheckedCommandFileHandle(args) as fh:
-            for line in fh:
-                if line[-1:] != "\n":
-                    raise Exception(
-                        "Line read from '%s' has no newline. Truncated?"
-                        % ( join(args, ' ') )
-                    )
-                list.append(line[:-1]) 
-        return list
+        fh = CheckedCommandFileHandle(args)
+        command = join(args, ' ')
+        return TreeHandle(fh, command)
 
     def get_revision_info(self, rev):
         with CheckedCommandFileHandle([ 'svnlook', 'info', '-r', str(rev), self.path ]) as fh:
