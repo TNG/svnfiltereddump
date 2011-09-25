@@ -343,6 +343,30 @@ class TestDumpFilter(TestCase):
         self.assertEqual(lump.get_header('Node-action'), 'add')
         self._check_content_tin(lump, "xxx\n\yyy\n")
 
+    def test_copy_in_start_rev(self):
+        self.config.start_rev = 3
+        self.interesting_paths.mark_path_as_interesting('a/b')
+        self.interesting_paths.mark_path_as_interesting('x/y')
+        self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B
+        self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
+        self.repo.properties_path_and_revision['x/y'] = { 2: { } }
+
+        self.dump_filter.process_revision(3)
+        self.assertEqual(len(self.dump_writer.lumps), 2)
+
+        self._verfiy_revision_header()
+
+        lump = self.dump_writer.lumps[1]
+        self.assertEqual(
+            lump.get_header_keys(),
+            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
+            'Text-content-md5' ]
+        )
+        self.assertEqual(lump.get_header('Node-path'), 'a/b')
+        self.assertEqual(lump.get_header('Node-kind'), 'file')
+        self.assertEqual(lump.get_header('Node-action'), 'add')
+        self._check_content_tin(lump, "xxx\n\yyy\n")
+
     def test_copy_in_with_change(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B_WITH_CHANGE
