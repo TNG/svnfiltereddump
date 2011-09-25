@@ -256,7 +256,7 @@ class SvnDumpWriterMock(object):
 
 class TestDumpFilter(TestCase):
     def setUp(self):
-        self.config = Config([ 'dummy' ])
+        self.config = Config([ '/dummy' ])
         self.interesting_paths = InterestingPaths()
         self.repo = SvnRepositoryMock()
         self.dump_writer = SvnDumpWriterMock()
