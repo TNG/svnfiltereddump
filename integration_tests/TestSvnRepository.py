@@ -7,13 +7,10 @@ from svn_repo_test_environment import TestEnvironment
 
 from svnfiltereddump import SvnRepository
 
-env = None
-
 class TestSvnRepository(unittest.TestCase):
-
+    env = None
     def setUp(self):
-        global env
-        if env is None:
+        if TestSvnRepository.env is None:
             env = TestEnvironment()
             # Revision 1
             env.mkdir('a')
@@ -32,9 +29,10 @@ class TestSvnRepository(unittest.TestCase):
             env.add_file('a/x1', 'x11111')
             env.add_file('a/x2', 'x22222')
             env.rm_file('a/bla')
-            env.commit('c3')
-        self.env = env
-        self.repo = SvnRepository(env.repo_path)
+            env.commit('c3\nextra long\n')
+            TestSvnRepository.env = env
+        self.env = TestSvnRepository.env
+        self.repo = SvnRepository(self.env.repo_path)
 
     def test_get_changes_rev1(self):
         self.assertEqual(
@@ -98,17 +96,19 @@ class TestSvnRepository(unittest.TestCase):
 UUID: XXX
 
 Revision-number: 3
-Prop-content-length: 104
-Content-length: 104
+Prop-content-length: 117
+Content-length: 117
 
 K 7
 svn:log
-V 2
+V 14
 c3
+extra long
+
 K 10
 svn:author
 V 8
-wilhelmh
+testuser
 K 8
 svn:date
 V 27
@@ -150,4 +150,9 @@ Node-action: delete
             self.repo.get_tree_for_path('a', 3),
             [ "a/", "a/bla2", "a/x1", "a/x2" ]
         )
+
+    def test_get_revision_info(self):
+        info = self.repo.get_revision_info(3)
+        self.assertEqual(info.author, 'testuser')
+        self.assertEqual(info.log_message, "c3\nextra long\n")
 

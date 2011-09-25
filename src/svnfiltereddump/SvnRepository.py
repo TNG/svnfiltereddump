@@ -7,6 +7,13 @@ from ContentTin import ContentTin
 
 from CheckedCommandFileHandle import CheckedCommandFileHandle
 
+
+class RevisionInfo(object):
+    def __init__(self, author, date, log_message):
+        self.author = author
+        self.date = date
+        self.log_message = log_message
+
 class SvnRepository(object):
 
     chunk_size = 1024**2
@@ -112,3 +119,19 @@ class SvnRepository(object):
                     )
                 list.append(line[:-1]) 
         return list
+
+    def get_revision_info(self, rev):
+        with CheckedCommandFileHandle([ 'svnlook', 'info', '-r', str(rev), self.path ]) as fh:
+            line = fh.readline()
+            author = line[:-1]
+            line = fh.readline()
+            date = line[:-1]
+            line = fh.readline()
+            log_size = int(line[:-1])
+            log_message = fh.read(log_size)
+            fh.read()
+        return RevisionInfo(
+            author = author,
+            date = date,
+            log_message = log_message
+        )

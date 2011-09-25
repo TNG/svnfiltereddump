@@ -2,9 +2,10 @@
 import tempfile
 import shutil
 import os
+import stat
 import re
 from subprocess import Popen, check_call, PIPE, STDOUT
-from string import join;
+from string import join
 
 def chomp(x):
     if x[-1:] == "\n":
@@ -36,6 +37,12 @@ class TestEnvironment:
        
         check_call( [ 'svnadmin', 'create',  self.repo_path ] )
         check_call( [ 'svn', 'co', self.repo_url, self.repo_working_copy ], stdout=self.dev_null )
+
+        # Our commit sets the author...
+        revprop_hook_name = self.repo_path + '/hooks/pre-revprop-change'
+        with open(revprop_hook_name, 'w') as fh:
+            fh.write("#!/bin/sh\nexit 0\n")
+        os.chmod(revprop_hook_name, stat.S_IWUSR | stat.S_IRUSR | stat.S_IXUSR)
 
         # Make sure we get english error messages - needed in is_existing_in_rev
         if re.search('utf8', os.getenv('LANG'), re.I) is None:
@@ -74,5 +81,7 @@ class TestEnvironment:
 
     def commit(self, comment):
         os.chdir(self.repo_working_copy)
-        check_call( [ 'svn', 'commit', '-m', comment ], stdout=self.dev_null )
-
+        check_call( [ 'svn', 'commit', '-m', comment ], stdout=self.dev_null)
+        out = get_output_of_command([ 'svnlook', 'youngest', self.repo_path ])
+        rev = out
+        check_call( [ 'svn', 'propset', '-r', rev, '--revprop', 'svn:author', 'testuser', self.repo_url ], stdout=self.dev_null)
