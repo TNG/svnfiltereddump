@@ -275,14 +275,6 @@ class TestDumpFilter(TestCase):
         self.assertEqual(len(self.dump_writer.lumps), 1)
         self._verfiy_revision_header()
 
-    def test_dump_empty_dropped(self):
-        self.interesting_paths.mark_path_as_interesting('other/path')
-        self.repo.dumps_by_revision[3] = DUMP_CHANGE_FILE_A_B
-        self.config.drop_empty_revs = True
-
-        self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 0)
-
     def test_dump_simple(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_CHANGE_FILE_A_B

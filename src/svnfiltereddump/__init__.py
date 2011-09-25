@@ -8,5 +8,6 @@ from LumpBuilder import LumpBuilder
 from CheckedCommandFileHandle import CheckedCommandFileHandle
 from Config import Config
 from RevisionMapper import RevisionMapper
-from RevisionAnalyser import RevisionAnalyser, STRATEGY_IGNORE, STRATEGY_SYNTHETIC_DELETES, STRATEGY_DUMP_SCAN
+from RevisionAnalyser import RevisionAnalyser, STRATEGY_IGNORE, STRATEGY_SYNTHETIC_DELETES, STRATEGY_DUMP_SCAN, STRATEGY_BOOTSTRAP
 from DumpFilter import DumpFilter
+from LumpPostProcessor import LumpPostProcessor

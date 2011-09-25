@@ -5,24 +5,11 @@ from svnfiltereddump import SvnDumpWriter
 from svnfiltereddump import SvnLump
 from svnfiltereddump import ContentTin
 
-class RevisionMapperMock(object):
-    def __init__(self):
-        self.mapped_revs = [ ]
-
-    def map_output_rev_for_input_rev(self, input_rev):
-        self.mapped_revs.append(input_rev)
-        return input_rev + 3
-        
-    def get_output_rev_for_input_rev(self, input_rev):
-        return input_rev + 3
-
 class SvnDumpWriterTests(TestCase):
 
     def setUp(self):
-        self.mapper = RevisionMapperMock()
         self.output = StringIO()
         self.writer =  SvnDumpWriter(
-            revision_mapper = self.mapper,
             file_handle = self.output
         )
 
@@ -52,8 +39,6 @@ header2: value2
         self.output.seek(0)
         self.assertEqual(self.output.read(), """header1: value1
 header2: value2
-Prop-content-length: 62
-Content-length: 62
 
 K 5
 prop1
@@ -116,8 +101,6 @@ y
 Node-kind: file
 Node-action: add
 Text-content-length: 16
-Prop-content-length: 27
-Content-length: 43
 
 K 4
 blub
@@ -130,19 +113,3 @@ fgasdfgsd
 
 """
         )
-
-    def test_use_revision_mapper(self):
-        lump = SvnLump()
-        lump.set_header('Revision-number', '27')
-        lump.set_header('Node-copyfrom-rev', '3')
-
-        self.writer.write_lump(lump)
-
-        self.output.seek(0)
-        self.assertEqual(self.output.read(), """Revision-number: 30
-Node-copyfrom-rev: 6
-
-"""
-        )
-        self.assertEqual(self.mapper.mapped_revs, [ 27 ])
-

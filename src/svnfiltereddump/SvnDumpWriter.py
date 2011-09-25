@@ -57,8 +57,7 @@ class _HeaderFixer(object):
             return raw_header_value
        
 class SvnDumpWriter(object):
-    def __init__(self, revision_mapper, file_handle):
-        self.revision_mapper = revision_mapper
+    def __init__(self, file_handle):
         self.file_handle = file_handle
 
     def write_lump(self, lump):
@@ -69,9 +68,14 @@ class SvnDumpWriter(object):
             self.file_handle.write("\n") 
 
     def _write_fixed_headers(self, lump):
-        fixer = _HeaderFixer(lump, self.revision_mapper)
-        fixer.write_fixed_headers(lump, self.file_handle)
-        self.file_handle.write("\n") 
+        fh = self.file_handle
+        for header_name in lump.get_header_keys():
+            header_value = lump.get_header(header_name)
+            fh.write(
+                "%s: %s\n"
+                % ( header_name, header_value )
+            )
+        fh.write("\n") 
 
     def _write_properties(self, lump):
         if not lump.properties:
