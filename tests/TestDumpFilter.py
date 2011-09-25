@@ -271,7 +271,7 @@ class TestDumpFilter(TestCase):
         self.interesting_paths.mark_path_as_interesting('other/path')
         self.repo.dumps_by_revision[3] = DUMP_CHANGE_FILE_A_B
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 1)
         self._verfiy_revision_header()
 
@@ -280,14 +280,14 @@ class TestDumpFilter(TestCase):
         self.repo.dumps_by_revision[3] = DUMP_CHANGE_FILE_A_B
         self.config.drop_empty_revs = True
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 0)
 
     def test_dump_simple(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_CHANGE_FILE_A_B
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 2)
         self._verfiy_revision_header()
 
@@ -307,7 +307,7 @@ class TestDumpFilter(TestCase):
         self.interesting_paths.mark_path_as_interesting('x/y')
         self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
 
         self.assertEqual(len(self.dump_writer.lumps), 2)
         self._verfiy_revision_header()
@@ -327,7 +327,7 @@ class TestDumpFilter(TestCase):
         self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
         self.repo.properties_path_and_revision['x/y'] = { 2: { } }
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 2)
 
         self._verfiy_revision_header()
@@ -349,7 +349,7 @@ class TestDumpFilter(TestCase):
         self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
         self.repo.properties_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 3)
 
         self._verfiy_revision_header()
@@ -387,7 +387,7 @@ class TestDumpFilter(TestCase):
         self.repo.properties_path_and_revision['x/y/c1'] = { 2: { 'prop2': 'value2' } }
         self.repo.properties_path_and_revision['x/y/c2'] = { 2: { } }
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 4)
 
         self._verfiy_revision_header()
@@ -429,7 +429,7 @@ class TestDumpFilter(TestCase):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_DELETE_FILE_A_B
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 2)
 
         self._verfiy_revision_header()
@@ -448,7 +448,7 @@ class TestDumpFilter(TestCase):
         self.repo.dumps_by_revision[3] = DUMP_DELETE_FILE_A_B
         self.repo.files_by_name_and_revision['a/b/c'] = { 2: "xxx\n\yyy\n" }
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 2)
 
         self._verfiy_revision_header()
@@ -466,7 +466,7 @@ class TestDumpFilter(TestCase):
         self.interesting_paths.mark_path_as_interesting('a/b/c')
         self.repo.dumps_by_revision[3] = DUMP_DELETE_FILE_A_B
 
-        self.dump_filter.filter_revision(3)
+        self.dump_filter.process_revision(3)
         self.assertEqual(len(self.dump_writer.lumps), 1)
 
         self._verfiy_revision_header()
