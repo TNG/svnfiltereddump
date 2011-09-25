@@ -156,3 +156,6 @@ Node-action: delete
         self.assertEqual(info.author, 'testuser')
         self.assertEqual(info.log_message, "c3\nextra long\n")
 
+    def test_get_uuid(self):
+        uuid = self.repo.get_uuid()
+        self.assertEqual(uuid, self.env.uuid)

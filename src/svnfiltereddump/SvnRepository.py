@@ -135,3 +135,8 @@ class SvnRepository(object):
             date = date,
             log_message = log_message
         )
+
+    def get_uuid(self):
+        with CheckedCommandFileHandle([ 'svnlook', 'uuid', self.path ]) as fh:
+            line = fh.read()
+        return line[:-1]

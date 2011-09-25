@@ -4,6 +4,12 @@ from StringIO import StringIO
 
 from svnfiltereddump import SvnLump, LumpBuilder, ContentTin
 
+class RevisionInfoMock:
+    def __init__(self):
+        self.author = 'testuser'
+        self.date = 'some date'
+        self.log_message = 'log message'
+
 class SvnRepositoryMock(object):
 
     def get_tin_for_file(self, path, rev):
@@ -32,6 +38,12 @@ class SvnRepositoryMock(object):
             return 'dir'
         else:
             return None
+
+    def get_revision_info(self, rev):
+        return RevisionInfoMock()
+
+    def get_uuid(self):
+        return 'fake-uuid'
         
 class SvnLumpTests(TestCase):
 
@@ -107,3 +119,29 @@ class SvnLumpTests(TestCase):
         self.assertEqual(fh.read(), 'abc')
         dummy_fh = StringIO()
         self.assertRaises(Exception, sample_lump.content.empty_to, dummy_fh)
+
+    def test_revision_header(self):
+        lump = self.builder.revision_header(23)
+
+        self.assertEqual(
+            lump.get_header_keys(),
+            [ 'Revision-number' ]
+        )
+        self.assertEqual(lump.get_header('Revision-number'), '23')
+        self.assertEqual(lump.properties, { 'svn:author': 'testuser', 'svn:date': 'some date', 'svn:log': 'log message' })
+        self.assertEqual(lump.content, None)
+
+    def test_dump_header_lumps(self):
+        lumps = self.builder.dump_header_lumps()
+
+        self.assertEqual(len(lumps), 2)
+
+        self.assertEqual(lumps[0].get_header_keys(), [ 'SVN-fs-dump-format-version' ])
+        self.assertEqual(lumps[0].get_header('SVN-fs-dump-format-version'), '2')
+        self.assertEqual(lumps[0].properties, { })
+        self.assertEqual(lumps[0].content, None)
+
+        self.assertEqual(lumps[1].get_header_keys(), [ 'UUID' ])
+        self.assertEqual(lumps[1].get_header('UUID'), 'fake-uuid')
+        self.assertEqual(lumps[1].properties, { })
+        self.assertEqual(lumps[1].content, None)

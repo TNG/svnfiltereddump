@@ -47,6 +47,9 @@ class TestEnvironment:
         # Make sure we get english error messages - needed in is_existing_in_rev
         if re.search('utf8', os.getenv('LANG'), re.I) is None:
             os.putenv('LANG', 'en_US.utf8')
+        with open(self.repo_path + '/db/uuid') as fh:
+            line = fh.read()
+            self.uuid = line[:-1]
 
     def __enter__(self):
         return self

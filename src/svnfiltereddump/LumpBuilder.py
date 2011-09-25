@@ -45,3 +45,21 @@ class LumpBuilder(object):
             if lump.has_header(header_name):
                 lump.delete_header(header_name)
         return lump
+
+    def revision_header(self, rev):
+        lump = SvnLump()
+        lump.set_header('Revision-number', str(rev))
+        rev_info = self.source_repository.get_revision_info(rev)
+        lump.properties = {
+            'svn:author': rev_info.author,
+            'svn:date': rev_info.date,
+            'svn:log': rev_info.log_message
+        }
+        return lump
+
+    def dump_header_lumps(self):
+        format_lump = SvnLump()
+        format_lump.set_header('SVN-fs-dump-format-version', '2')
+        uuid_lump = SvnLump()
+        uuid_lump.set_header('UUID', str(self.source_repository.get_uuid()))
+        return [ format_lump, uuid_lump ]
