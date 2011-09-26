@@ -9,6 +9,8 @@ class SvnRepositoryMock(object):
         self.answers = { }
     def get_changed_paths_by_change_type_for_revision(self, rev):
         return self.answers[rev]
+    def get_youngest_revision(self):
+        return 4711
 
 class InterestingPathMock(object):
     def is_interesting(self, path):
@@ -144,4 +146,17 @@ class TestRevisionAnalyser(TestCase):
 
         self.assertEqual(strategy, STRATEGY_BOOTSTRAP)
         self.assertEqual(deleted_paths, None)
-         
+
+    def test_get_first_revision(self):
+        first_rev = self.analyser.get_first_revision()
+        self.assertEqual(first_rev, 1)
+
+    def test_get_first_revision_with_start_rev(self):
+        self.config.start_rev = 5
+        first_rev = self.analyser.get_first_revision()
+        self.assertEqual(first_rev, 5)
+
+    def test_get_last_revision(self):
+        last_rev = self.analyser.get_last_revision()
+        self.assertEqual(last_rev, 4711)
+

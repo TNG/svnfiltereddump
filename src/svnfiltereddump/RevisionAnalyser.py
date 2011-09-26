@@ -33,3 +33,12 @@ class RevisionAnalyser(object):
             return ( STRATEGY_SYNTHETIC_DELETES, delete_paths )
        
         return ( STRATEGY_IGNORE, None )
+
+    def get_first_revision(self):
+        if self.config.start_rev:
+            return self.config.start_rev
+        else:
+            return 1
+
+    def get_last_revision(self):
+        return self.repository.get_youngest_revision()
