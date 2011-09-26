@@ -160,3 +160,7 @@ Node-action: delete
     def test_get_uuid(self):
         uuid = self.repo.get_uuid()
         self.assertEqual(uuid, self.env.uuid)
+
+    def test_get_youngest_revision(self):
+        last_rev = self.repo.get_youngest_revision()
+        self.assertEqual(last_rev, 3)

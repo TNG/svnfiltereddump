@@ -156,3 +156,8 @@ class SvnRepository(object):
         with CheckedCommandFileHandle([ 'svnlook', 'uuid', self.path ]) as fh:
             line = fh.read()
         return line[:-1]
+
+    def get_youngest_revision(self):
+        with CheckedCommandFileHandle([ 'svnlook', 'youngest', self.path ]) as fh:
+            line = fh.read()
+        return int(line[:-1])
