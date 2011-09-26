@@ -1,16 +1,22 @@
 
+STRATEGY_DUMP_HEADER = 'DUMP_HEADER'
 STRATEGY_IGNORE = 'IGNORE'
 STRATEGY_SYNTHETIC_DELETES = 'SYNTHETIC_DELETES'
 STRATEGY_DUMP_SCAN = 'DUMP_SCAN'
 STRATEGY_BOOTSTRAP = 'BOOTSTRAP'
 
-class RevisionAnalyser(object):
-    def __init__(self, config, repository, intresting_paths):
+DUMP_HEADER_PSEUDO_REV = -1
+
+class DumpController(object):
+    def __init__(self, config, repository, intresting_paths, revision_handlers_by_strategy):
         self.config = config
         self.repository = repository
         self.intresting_paths = intresting_paths
+        self.revision_handlers_by_strategy = revision_handlers_by_strategy
 
-    def get_strategy_and_aux_data_for_revision(self, rev):
+    def _get_strategy_and_aux_data_for_revision(self, rev):
+        if rev == DUMP_HEADER_PSEUDO_REV:
+            return ( STRATEGY_DUMP_HEADER, None )
         if rev == self.config.start_rev:
             return ( STRATEGY_BOOTSTRAP, None )
 
@@ -34,11 +40,16 @@ class RevisionAnalyser(object):
        
         return ( STRATEGY_IGNORE, None )
 
-    def get_first_revision(self):
-        if self.config.start_rev:
-            return self.config.start_rev
-        else:
-            return 1
+    def run(self):
+        header_handler = self.revision_handlers_by_strategy[STRATEGY_DUMP_HEADER]
+        header_handler.process_revision(DUMP_HEADER_PSEUDO_REV, None)
 
-    def get_last_revision(self):
-        return self.repository.get_youngest_revision()
+        first_revision = 1
+        if self.config.start_rev:
+            first_revision = self.config.start_rev
+        last_revision = self.repository.get_youngest_revision()
+
+        for revision in xrange(first_revision, last_revision+1):
+            ( strategy, aux_data ) = self._get_strategy_and_aux_data_for_revision(revision)
+            handler = self.revision_handlers_by_strategy[strategy]
+            handler.process_revision(revision, aux_data) 
