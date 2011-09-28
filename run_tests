@@ -1,5 +1,0 @@
-#!/bin/bash
-
-export PYTHONPATH=`dirname $0`/test_helpers
-
-nosetests

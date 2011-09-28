@@ -1,9 +1,11 @@
 
 from unittest import TestCase
 from StringIO import StringIO
-from copy import copy
+
+from LumpBuilderMock import LumpBuilderMock
 
 from svnfiltereddump import Config, InterestingPaths, DumpFilter, ContentTin
+
 
 DUMP_CHANGE_FILE_A_B = """SVN-fs-dump-format-version: 3
 
@@ -239,32 +241,17 @@ class SvnRepositoryMock(object):
         return StringIO(self.dumps_by_revision[rev])
 
 
-class SvnDumpWriterMock(object):
-    def __init__(self):
-        self.lumps = [ ]
-
-    def write_lump(self, lump):
-        new_lump = copy(lump)
-        if lump.content:
-            fh = StringIO()
-            lump.content.empty_to(fh)
-            fh.seek(0)
-            new_lump.content = fh.read()    # Hack Part 1
-        self.lumps.append(new_lump)
-
-
-
 class TestDumpFilter(TestCase):
     def setUp(self):
         self.config = Config([ '/dummy' ])
         self.interesting_paths = InterestingPaths()
         self.repo = SvnRepositoryMock()
-        self.dump_writer = SvnDumpWriterMock()
+        self.builder = LumpBuilderMock()
         self.dump_filter = DumpFilter(
             config = self.config,
             source_repository = self.repo,
             interesting_paths = self.interesting_paths,
-            dump_writer = self.dump_writer
+            lump_builder = self.builder
         )
 
     def test_dump_empty(self):
@@ -272,7 +259,8 @@ class TestDumpFilter(TestCase):
         self.repo.dumps_by_revision[3] = DUMP_CHANGE_FILE_A_B
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 1)
+
+        self.assertEqual(len(self.builder.call_history), 1)
         self._verfiy_revision_header()
 
     def test_dump_simple(self):
@@ -280,10 +268,13 @@ class TestDumpFilter(TestCase):
         self.repo.dumps_by_revision[3] = DUMP_CHANGE_FILE_A_B
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 2)
+
+        self.assertEqual(len(self.builder.call_history), 2)
+
         self._verfiy_revision_header()
 
-        lump = self.dump_writer.lumps[1]
+        self.assertEqual(self.builder.call_history[1][0], 'pass_lump' )
+        lump = self.builder.call_history[1][1]
         self.assertEqual(
             lump.get_header_keys(),
             [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
@@ -292,7 +283,7 @@ class TestDumpFilter(TestCase):
         self.assertEqual(lump.get_header('Node-path'), 'a/b')
         self.assertEqual(lump.get_header('Node-kind'), 'file')
         self.assertEqual(lump.get_header('Node-action'), 'change')
-        self._check_content_tin(lump, "y\n")
+        self._assertTin(lump, "y\n")
 
     def test_internal_copy(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
@@ -301,10 +292,11 @@ class TestDumpFilter(TestCase):
 
         self.dump_filter.process_revision(3)
 
-        self.assertEqual(len(self.dump_writer.lumps), 2)
+        self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
 
-        lump = self.dump_writer.lumps[1]
+        self.assertEqual(self.builder.call_history[1][0], 'pass_lump' )
+        lump = self.builder.call_history[1][1]
         self.assertEqual(
             lump.get_header_keys(),
             [ 'Node-path', 'Node-kind', 'Node-action', 'Node-copyfrom-rev',
@@ -320,20 +312,10 @@ class TestDumpFilter(TestCase):
         self.repo.properties_path_and_revision['x/y'] = { 2: { } }
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 2)
-
         self._verfiy_revision_header()
-
-        lump = self.dump_writer.lumps[1]
-        self.assertEqual(
-            lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
-            'Text-content-md5' ]
+        self.assertEqual(self.builder.call_history[1],
+            [ 'add_path_from_source_repository', 'file', 'a/b', 'x/y', 2 ]
         )
-        self.assertEqual(lump.get_header('Node-path'), 'a/b')
-        self.assertEqual(lump.get_header('Node-kind'), 'file')
-        self.assertEqual(lump.get_header('Node-action'), 'add')
-        self._check_content_tin(lump, "xxx\n\yyy\n")
 
     def test_copy_in_start_rev(self):
         self.config.start_rev = 3
@@ -344,20 +326,10 @@ class TestDumpFilter(TestCase):
         self.repo.properties_path_and_revision['x/y'] = { 2: { } }
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 2)
-
         self._verfiy_revision_header()
-
-        lump = self.dump_writer.lumps[1]
-        self.assertEqual(
-            lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
-            'Text-content-md5' ]
+        self.assertEqual(self.builder.call_history[1],
+            [ 'add_path_from_source_repository', 'file', 'a/b', 'x/y', 2 ]
         )
-        self.assertEqual(lump.get_header('Node-path'), 'a/b')
-        self.assertEqual(lump.get_header('Node-kind'), 'file')
-        self.assertEqual(lump.get_header('Node-action'), 'add')
-        self._check_content_tin(lump, "xxx\n\yyy\n")
 
     def test_copy_in_with_change(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
@@ -366,32 +338,25 @@ class TestDumpFilter(TestCase):
         self.repo.properties_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 3)
 
+        self.assertEqual(len(self.builder.call_history), 3)
         self._verfiy_revision_header()
+        self.assertEqual(self.builder.call_history[1], 
+            [ 'add_path_from_source_repository', 'file', 'a/b', 'x/y', 2 ]
+        )
 
-        lump = self.dump_writer.lumps[1]
+        self.assertEqual(self.builder.call_history[2][0], 'change_lump_from_add_lump')
+        lump = self.builder.call_history[2][1]
         self.assertEqual(
             lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
-            'Text-content-md5' ]
+            ['Node-path', 'Node-kind', 'Node-action', 'Node-copyfrom-rev', 'Node-copyfrom-path',
+            'Text-copy-source-md5', 'Text-copy-source-sha1', 'Text-content-length', 'Text-content-md5',
+            'Text-content-sha1', 'Prop-content-length', 'Content-length']
         )
         self.assertEqual(lump.get_header('Node-path'), 'a/b')
-        self.assertEqual(lump.get_header('Node-kind'), 'file')
         self.assertEqual(lump.get_header('Node-action'), 'add')
-        self.assertEqual(lump.properties, { 'prop1': 'value1' } )
-        self._check_content_tin(lump, "xxx\n\yyy\n")
-
-        lump = self.dump_writer.lumps[2]
-        self.assertEqual(
-            lump.get_header_keys(),
-            [ 'Node-path', 'Node-action', 'Text-content-length',
-            'Text-content-md5', 'Text-content-sha1', 'Prop-content-length', 'Content-length' ]
-        )
-        self.assertEqual(lump.get_header('Node-path'), 'a/b')
-        self.assertEqual(lump.get_header('Node-action'), 'change')
         self.assertEqual(lump.properties, { 'propa': 'value2', 'propb': 'valueb' } )
-        self._check_content_tin(lump, "y\n")
+        self._assertTin(lump, "y\n")
 
     def test_copy_in_dir(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
@@ -404,52 +369,22 @@ class TestDumpFilter(TestCase):
         self.repo.properties_path_and_revision['x/y/c2'] = { 2: { } }
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 4)
-
         self._verfiy_revision_header()
-
-        lump = self.dump_writer.lumps[1]
-        self.assertEqual(
-            lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action' ]
+        self.assertEqual(self.builder.call_history[1],
+            [ 'add_tree_from_source', 'a/b', 'x/y', 2 ]
         )
-        self.assertEqual(lump.get_header('Node-path'), 'a/b')
-        self.assertEqual(lump.get_header('Node-kind'), 'dir')
-        self.assertEqual(lump.get_header('Node-action'), 'add')
-        self.assertEqual(lump.properties, { 'prop1': 'value1' })
-        self.assertEqual(lump.content, None)
-
-        lump = self.dump_writer.lumps[2]
-        self.assertEqual(
-            lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length', 'Text-content-md5' ]
-        )
-        self.assertEqual(lump.get_header('Node-path'), 'a/b/c1')
-        self.assertEqual(lump.get_header('Node-kind'), 'file')
-        self.assertEqual(lump.get_header('Node-action'), 'add')
-        self.assertEqual(lump.properties, { 'prop2': 'value2' })
-        self._check_content_tin(lump, "xxx\n\yy1\n")
-        
-        lump = self.dump_writer.lumps[3]
-        self.assertEqual(
-            lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length', 'Text-content-md5' ]
-        )
-        self.assertEqual(lump.get_header('Node-path'), 'a/b/c2')
-        self.assertEqual(lump.get_header('Node-kind'), 'file')
-        self.assertEqual(lump.get_header('Node-action'), 'add')
-        self.assertEqual(lump.properties, { })
-        self._check_content_tin(lump, "xxx\n\yy2\n")
         
     def test_delete_inside(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_DELETE_FILE_A_B
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 2)
 
+        self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
-        lump = self.dump_writer.lumps[1]
+        self.assertEqual(self.builder.call_history[1][0], 'pass_lump')
+
+        lump = self.builder.call_history[1][1]
         self.assertEqual(
             lump.get_header_keys(),
             [ 'Node-path', 'Node-action' ]
@@ -465,30 +400,25 @@ class TestDumpFilter(TestCase):
         self.repo.files_by_name_and_revision['a/b/c'] = { 2: "xxx\n\yyy\n" }
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 2)
 
+        self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
-        lump = self.dump_writer.lumps[1]
-        self.assertEqual(
-            lump.get_header_keys(),
-            [ 'Node-path', 'Node-action' ]
+        self.assertEqual(self.builder.call_history[1], 
+            [ 'delete_path', 'a/b/c' ]
         )
-        self.assertEqual(lump.get_header('Node-path'), 'a/b/c')
-        self.assertEqual(lump.get_header('Node-action'), 'delete')
-        self.assertEqual(lump.properties, { })
-        self.assertEqual(lump.content, None)
 
     def test_delete_over_non_existing(self):
         self.interesting_paths.mark_path_as_interesting('a/b/c')
         self.repo.dumps_by_revision[3] = DUMP_DELETE_FILE_A_B
 
         self.dump_filter.process_revision(3)
-        self.assertEqual(len(self.dump_writer.lumps), 1)
 
+        self.assertEqual(len(self.builder.call_history), 1)
         self._verfiy_revision_header()
 
     def _verfiy_revision_header(self):
-        lump = self.dump_writer.lumps[0]
+        self.assertEqual(self.builder.call_history[0][0], 'pass_lump')
+        lump = self.builder.call_history[0][1]
         self.assertEqual(
             lump.get_header_keys(),
             [ 'Revision-number', 'Prop-content-length', 'Content-length' ]
@@ -499,5 +429,7 @@ class TestDumpFilter(TestCase):
             { 'svn:log': "Bl\n", 'svn:author': 'wilhelmh', 'svn:date': '2011-09-04T10:27:15.088237Z' }
         )
 
-    def _check_content_tin(self, lump, expected_content):
-        self.assertEqual(lump.content, expected_content) # Hack Part 2
+    def _assertTin(self, lump, expected_content):
+        # Hack: Works only in conjunction with LumpBuilderMock
+        self.assertEqual(lump.content, expected_content)
+ 

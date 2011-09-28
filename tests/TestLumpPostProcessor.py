@@ -4,6 +4,8 @@ from StringIO import StringIO
 
 from svnfiltereddump import Config, LumpPostProcessor, ContentTin, SvnLump
 
+from DumpWriterMock import DumpWriterMock
+
 class RevisionMapperMock(object):
     def __init__(self):
         self.mapped_revs = [ ]
@@ -15,19 +17,11 @@ class RevisionMapperMock(object):
     def get_output_rev_for_input_rev(self, input_rev):
         return input_rev + 3
 
-class SvnDumpWriterMock(object):
-    def __init__(self):
-        self.lumps = [ ]
-
-    def write_lump(self, lump):
-        self.lumps.append(lump)
-
-
 class TestLumpPostProcessor(TestCase):
     def setUp(self):
         self.config = Config( [ '/dummy' ] )
         self.rev_mapper = RevisionMapperMock()
-        self.writer = SvnDumpWriterMock()
+        self.writer = DumpWriterMock(self)
         self.processor = LumpPostProcessor(self.config, self.rev_mapper, self.writer)
 
     def test_dont_drop_empty_revs(self):

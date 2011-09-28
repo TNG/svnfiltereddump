@@ -6,14 +6,15 @@ from SvnLump import SvnLump
 from SvnRepository import SvnRepository
 
 class LumpBuilder(object):
-    def __init__(self, source_repository):
+    def __init__(self, source_repository, dump_writer):
         self.source_repository = source_repository
+        self.dump_writer = dump_writer
 
     def delete_path(self, path):
         lump = SvnLump()
         lump.set_header('Node-path', normpath(path))
         lump.set_header('Node-action', 'delete')
-        return lump
+        self.dump_writer.write_lump(lump)
 
     def add_path_from_source_repository(self, kind, path, from_path, from_rev):
         assert kind == 'file' or kind =='dir'
@@ -33,7 +34,7 @@ class LumpBuilder(object):
             lump.set_header('Text-content-md5', tin.md5sum)
 
         lump.properties = repo.get_properties_of_path(from_path, from_rev)
-        return lump
+        self.dump_writer.write_lump(lump)
 
     def change_lump_from_add_lump(self, sample_lump):
         lump = copy(sample_lump)
@@ -44,7 +45,7 @@ class LumpBuilder(object):
         ]:
             if lump.has_header(header_name):
                 lump.delete_header(header_name)
-        return lump
+        self.dump_writer.write_lump(lump)
 
     def revision_header(self, rev):
         lump = SvnLump()
@@ -55,11 +56,29 @@ class LumpBuilder(object):
             'svn:date': rev_info.date,
             'svn:log': rev_info.log_message
         }
-        return lump
+        self.dump_writer.write_lump(lump)
 
     def dump_header_lumps(self):
-        format_lump = SvnLump()
-        format_lump.set_header('SVN-fs-dump-format-version', '2')
-        uuid_lump = SvnLump()
-        uuid_lump.set_header('UUID', str(self.source_repository.get_uuid()))
-        return [ format_lump, uuid_lump ]
+        lump = SvnLump()
+        lump.set_header('SVN-fs-dump-format-version', '2')
+        self.dump_writer.write_lump(lump)
+
+        lump = SvnLump()
+        lump.set_header('UUID', str(self.source_repository.get_uuid()))
+        self.dump_writer.write_lump(lump)
+
+    def pass_lump(self, lump):
+        self.dump_writer.write_lump(lump)
+
+    def add_tree_from_source(self, path, from_path, from_rev):
+        if path[-1:] != '/':
+            path += '/'
+        with self.source_repository.get_tree_handle_for_path(from_path, from_rev) as tree_handle:
+            for from_sub_path in tree_handle:
+                if from_sub_path[-1:] == '/':
+                    kind = 'dir'
+                    from_sub_path = from_sub_path[:-1]
+                else:
+                    kind = 'file'
+                sub_path = path + from_sub_path[len(from_path):]
+                self.add_path_from_source_repository(kind, sub_path, from_sub_path, from_rev)
