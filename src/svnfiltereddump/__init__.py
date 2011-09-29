@@ -10,4 +10,5 @@ from Config import Config
 from RevisionMapper import RevisionMapper
 from DumpController import DumpController, STRATEGY_DUMP_HEADER, STRATEGY_IGNORE, STRATEGY_SYNTHETIC_DELETES, STRATEGY_DUMP_SCAN, STRATEGY_BOOTSTRAP
 from DumpFilter import DumpFilter
+from BootsTrapper import BootsTrapper
 from LumpPostProcessor import LumpPostProcessor

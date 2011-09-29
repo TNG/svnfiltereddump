@@ -15,6 +15,8 @@ class LumpBuilderMock(object):
         self.call_history.append( [ 'revision_header', rev ] )
     def dump_header_lumps(self):
         self.call_history.append( [ 'dump_header_lumps' ] )
+    def revision_header(self, rev):
+        self.call_history.append( [ 'revision_header', rev ] )
     def pass_lump(self, lump):
         self.call_history.append( [ 'pass_lump', self._clone_lump_to_lump_with_fake_bin(lump) ] )
     def add_tree_from_source(self, path, source_path, source_rev):

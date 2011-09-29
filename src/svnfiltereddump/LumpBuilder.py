@@ -6,8 +6,9 @@ from SvnLump import SvnLump
 from SvnRepository import SvnRepository
 
 class LumpBuilder(object):
-    def __init__(self, source_repository, dump_writer):
+    def __init__(self, source_repository, interesting_paths, dump_writer):
         self.source_repository = source_repository
+        self.interesting_paths = interesting_paths
         self.dump_writer = dump_writer
 
     def delete_path(self, path):
@@ -81,4 +82,5 @@ class LumpBuilder(object):
                 else:
                     kind = 'file'
                 sub_path = path + from_sub_path[len(from_path):]
-                self.add_path_from_source_repository(kind, sub_path, from_sub_path, from_rev)
+                if self.interesting_paths.is_interesting(sub_path):
+                    self.add_path_from_source_repository(kind, sub_path, from_sub_path, from_rev)

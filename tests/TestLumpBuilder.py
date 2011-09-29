@@ -2,7 +2,7 @@
 from unittest import TestCase
 from StringIO import StringIO
 
-from svnfiltereddump import SvnLump, LumpBuilder, ContentTin
+from svnfiltereddump import SvnLump, LumpBuilder, ContentTin, InterestingPaths
 
 from DumpWriterMock import DumpWriterMock
 
@@ -95,7 +95,8 @@ class TestLumpLumpBuilder(TestCase):
     def setUp(self):
         repo = SvnRepositoryMock()
         self.writer = DumpWriterMock(self)
-        self.builder = LumpBuilder(repo, self.writer);
+        self.interesting_paths = InterestingPaths();
+        self.builder = LumpBuilder(repo, self.interesting_paths, self.writer);
 
     def test_delete_lump(self):
         self.builder.delete_path('a/b/c')
@@ -213,6 +214,8 @@ class TestLumpLumpBuilder(TestCase):
         self.writer.check_content_tin_of_lump_nr(0, None)
 
     def test_add_tree_from_source(self):
+        self.interesting_paths.mark_path_as_interesting('a/b')
+
         self.builder.add_tree_from_source('a/b', 'dir/in/source/repo_rev2/', 2)
 
         self.assertEqual(len(self.writer.lumps), 3)
@@ -254,3 +257,34 @@ class TestLumpLumpBuilder(TestCase):
         self.assertEqual(lump.properties, { } )
         self.writer.check_content_tin_of_lump_nr(2, 'y')
 
+    def test_add_tree_from_source_with_boring_path(self):
+        self.interesting_paths.mark_path_as_interesting('a/b')
+        self.interesting_paths.mark_path_as_boring('a/b/x')
+
+        self.builder.add_tree_from_source('a/b', 'dir/in/source/repo_rev2/', 2)
+
+        self.assertEqual(len(self.writer.lumps), 2)
+        
+        lump = self.writer.lumps[0]
+        self.assertEqual(
+            lump.get_header_keys(),
+            [ 'Node-path', 'Node-kind', 'Node-action' ]
+        )
+        self.assertEqual(lump.get_header('Node-path'), 'a/b')
+        self.assertEqual(lump.get_header('Node-kind'), 'dir')
+        self.assertEqual(lump.get_header('Node-action'), 'add')
+        self.assertEqual(lump.properties, { 'a2': 'y1', 'b2': 'y2' } )
+        self.writer.check_content_tin_of_lump_nr(0, None)
+
+        lump = self.writer.lumps[1]
+        self.assertEqual(
+            lump.get_header_keys(),
+            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length', 'Text-content-md5' ]
+        )
+        self.assertEqual(lump.get_header('Node-path'), 'a/b/y')
+        self.assertEqual(lump.get_header('Node-kind'), 'file')
+        self.assertEqual(lump.get_header('Node-action'), 'add')
+        self.assertEqual(lump.get_header('Text-content-length'), '1')
+        self.assertEqual(lump.get_header('Text-content-md5'), 'FAKESUM')
+        self.assertEqual(lump.properties, { } )
+        self.writer.check_content_tin_of_lump_nr(1, 'y')
