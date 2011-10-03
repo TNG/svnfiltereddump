@@ -15,3 +15,4 @@ from LumpPostProcessor import LumpPostProcessor
 from BootsTrapper import BootsTrapper
 from DumpFilter import DumpFilter
 from SyntheticDeleter import SyntheticDeleter
+from RevisionIgnorer import RevisionIgnorer
