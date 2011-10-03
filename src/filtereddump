@@ -3,9 +3,12 @@
 from sys import argv, stdout
 from os import putenv
 from os.path import basename
+from string import join
 import logging
 
 from svnfiltereddump import *
+
+console_handler = None
 
 def create_config_from_parameters():
     config = Config(argv[1:])
@@ -16,33 +19,41 @@ def create_config_from_parameters():
         interesting_paths.mark_path_as_boring(path)
     return ( config, interesting_paths)
 
-def setup_logging(config):
-    logger = logging.getLogger(basename(argv[0]))
+def setup_early_logging():
+    global console_handler
+    logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-
-    console_formatter = logging.Formatter('%(asctime)s %(message)s')
+    console_formatter = logging.Formatter('%(levelname)s %(message)s')
     console_handler = logging.StreamHandler()
-    if config.quiet:
-        console_handler.setLevel(logging.WARNING)
-    else:
-        console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
+    
 
+def setup_final_logging(config):
+    if config.quiet:
+        console_handler.setLevel(logging.WARNING)
+    # console_formatter = logging.Formatter(' %(levelname)s %(message)s')
+    
     if config.log_file:
-        log_file_formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+        log_name = basename(argv[0])
+        log_file_formatter = logging.Formatter('%(asctime)s ' + log_name + ' %(levelname)s %(message)s')
         log_file_handler = logging.FileHandler(config.log_file)
         log_file_handler.setLevel(logging.DEBUG)
         log_file_handler.setFormatter(log_file_formatter)
+        logger = logging.getLogger()
         logger.addHandler(log_file_handler)
+
+setup_early_logging()
+
+( config, interesting_paths ) = create_config_from_parameters()
+setup_final_logging(config)
+logging.info("Command line: " + join(argv, ' '))
 
 # Make sure that:
 # 1) We get english error messages
 # 2) We have no encoding issues in the output/input of SVN commands
 putenv('LANG', 'en_US.utf8')
-
-( config, interesting_paths ) = create_config_from_parameters()
-setup_logging(config)
 
 revision_mapper = RevisionMapper(config)
 source_repository = SvnRepository(config.source_repository)

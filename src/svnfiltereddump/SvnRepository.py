@@ -129,7 +129,12 @@ class SvnRepository(object):
     def get_dump_file_handle_for_revision(self, rev):
         return CheckedCommandFileHandle(
             [ 'svnadmin', 'dump', '--incremental', '-r', str(rev), self.path ],
-            [ '^\* Dumped revision \d+\.$' ]
+            [
+                '^\* Dumped revision \d+\.$',
+                '^WARNING: Referencing data in revision \d+, which is older than the oldest$',
+                '^WARNING: dumped revision \(\d+\)\.  Loading this dump into an empty repository$',
+                '^WARNING: will fail\.$'
+            ]
         )
 
     def get_tree_handle_for_path(self, path, rev):

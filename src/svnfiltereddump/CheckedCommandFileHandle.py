@@ -82,6 +82,7 @@ class CheckedCommandFileHandle(object):
                     line_ok = True
                     break
             if not line_ok:
+                self.error_fh.write("FAILED LINE: '"+line+"'\n")
                 cmd = join(self.args, ' ')
                 self.error_fh.write("Output of command '%s' on STDERR:\n%s\n" % ( cmd, error ) )
                 raise Exception("Command '%s' wrote to STDERR (see above)!" % ( cmd ))

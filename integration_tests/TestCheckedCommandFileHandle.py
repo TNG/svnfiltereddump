@@ -1,4 +1,5 @@
 
+import re
 from StringIO import StringIO
 from unittest import TestCase
 
@@ -42,7 +43,8 @@ class TestCheckedCommandFileHandle(TestCase):
        
         self.assertRaises(Exception, self.get_output_lines_of_command, args)
         self.stderr_mock.seek(0)
-        self.assertEqual(self.stderr_mock.read(), "Output of command 'sh -c echo Bla; echo Blub >&2' on STDERR:\nBlub\n")
+        out = self.stderr_mock.read()
+        self.assertTrue(re.search("Output of command 'sh -c echo Bla; echo Blub >&2' on STDERR:\nBlub\n", out))
 
     def test_stderr_bad_with_ignore(self):
         args = [ 'sh', '-c', 'echo Bla; echo Blub >&2' ]
@@ -50,7 +52,8 @@ class TestCheckedCommandFileHandle(TestCase):
        
         self.assertRaises(Exception, self.get_output_lines_of_command, args, ignore_patterns)
         self.stderr_mock.seek(0)
-        self.assertEqual(self.stderr_mock.read(), "Output of command 'sh -c echo Bla; echo Blub >&2' on STDERR:\nBlub\n")
+        out = self.stderr_mock.read()
+        self.assertTrue(re.search("Output of command 'sh -c echo Bla; echo Blub >&2' on STDERR:\nBlub\n", out))
 
     def test_stderr_good(self):
         args = [ 'sh', '-c', 'echo Bla something >&2' ]

@@ -1,6 +1,5 @@
 
 from optparse import OptionParser
-from logging import debug
 from string import join
 
 def _parse_command_line(command_line):
@@ -67,7 +66,6 @@ def _get_file_as_list(name):
 class Config(object):
 
     def __init__(self, command_line):
-        debug("Command line: %s" % ( join(command_line, ' ' ) ))
         ( options, source_repository, include_paths ) = _parse_command_line(command_line)
 
         self.source_repository = source_repository
