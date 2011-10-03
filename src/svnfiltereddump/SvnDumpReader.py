@@ -1,6 +1,7 @@
 
 from re import match
-from svnfiltereddump import SvnLump, ContentTin
+from SvnLump import SvnLump
+from ContentTin import ContentTin
 from string import join
 
 class SvnDumpReader(object):
