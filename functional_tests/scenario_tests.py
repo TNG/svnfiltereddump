@@ -65,10 +65,10 @@ class ScenarioTests(unittest.TestCase):
 
         self.filter_repo_and_check( [ 'b' ] )
 
-        self.assertFalse(env.is_existing_in_rev('a/bla', 1), 'File bla not existent in rev 2')
+        self.assertFalse(env.is_existing_in_rev('a/bla', 1), 'File bla not existent in rev 1')
         self.assertEquals(env.get_file_content_in_rev('b/blub', 2), 'xxx', 'File b/blub correct in rev 2')
         self.assertEquals(env.get_property_in_rev('b/blub', 2, 'some_prop'), 'prop_value', 'File b/blub property correct in rev 2')
-        self.check_log_of_file_in_rev('b/blub', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
+        self.check_log_of_file_in_rev('b/blub', 2, [ [ 2, 'c2' ] ])
         
     def test_add_into_excluded(self):
         env = self.env
