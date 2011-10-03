@@ -21,10 +21,7 @@ class ComandLineFeatureTests(unittest.TestCase):
     def check_log_of_file_in_rev(self, name, rev, exected_log):
         ( parsed_log, error ) = self.env.get_log_of_file_in_rev(name, rev)
         if error is None:
-            self.assertEquals(
-                parsed_log, exected_log,
-                "Validate log of file file %s in revision %d" % ( name, rev )
-            )
+            self.assertEquals(parsed_log, exected_log)
         else:
             self.fail(
                 "Failed to get log of file %s in revision %d with error:\n%s"
@@ -144,7 +141,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         self.filter_repo_and_check( [ 'a' ] )
 
         self.check_log_of_file_in_rev('a/bla', 3, [ [ 3, 'c3' ], [ 1, 'c1' ] ])
-        self.assertEquals(env.get_log_of_revision(2), 'This is an empty revision for padding.')
+        self.assertEquals(env.get_log_of_revision(2), 'c2')
          
     def test_drop_empty_revs(self):
         env = self.env
@@ -190,11 +187,16 @@ class ComandLineFeatureTests(unittest.TestCase):
         # Revision 2
         env.change_file('a/bla', 'yyy')
         env.commit('c2')
+        # Revision 3
+        env.change_file('a/bla', 'zzz')
+        env.commit('c3')
 
         self.filter_repo_and_check( [ '--start-rev', '2', 'a' ] )
 
-        self.assertEquals(env.get_file_content_in_rev('a/bla', 2), 'yyy', 'File a/bla correct in rev 2')
-        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ] ])
+        self.assertEquals(env.get_file_content_in_rev('a/bla', 1), 'yyy', 'File a/bla correct in rev 1')
+        self.check_log_of_file_in_rev('a/bla', 1, [ [ 1, 'c2' ] ])
+        self.assertEquals(env.get_file_content_in_rev('a/bla', 2), 'zzz', 'File a/bla correct in rev 2')
+        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c2' ] ])
 
         
 if __name__ == '__main__':

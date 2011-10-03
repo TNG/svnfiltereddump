@@ -5,7 +5,7 @@ from subprocess import call
 from functional_test_environment import TestEnvironment
 
 
-class ComandLineFeatureTests(unittest.TestCase):
+class ScenarioTests(unittest.TestCase):
     
     def setUp(self):
         self.env = TestEnvironment()

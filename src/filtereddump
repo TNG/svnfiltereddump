@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+
+from sys import argv, stdout
+from os import putenv
+from os.path import basename
+import logging
+
+from svnfiltereddump import *
+
+def create_config_from_parameters():
+    config = Config(argv[1:])
+    interesting_paths = InterestingPaths()
+    for path in config.include_paths:
+        interesting_paths.mark_path_as_interesting(path)
+    for path in config.exclude_paths:
+        interesting_paths.mark_path_as_boring(path)
+    return ( config, interesting_paths)
+
+def setup_logging(config):
+    logger = logging.getLogger(basename(argv[0]))
+    logger.setLevel(logging.DEBUG)
+
+    console_formatter = logging.Formatter('%(asctime)s %(message)s')
+    console_handler = logging.StreamHandler()
+    if config.quiet:
+        console_handler.setLevel(logging.WARNING)
+    else:
+        console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+
+    if config.log_file:
+        log_file_formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+        log_file_handler = logging.FileHandler(config.log_file)
+        log_file_handler.setLevel(logging.DEBUG)
+        log_file_handler.setFormatter(log_file_formatter)
+        logger.addHandler(log_file_handler)
+
+# Make sure that:
+# 1) We get english error messages
+# 2) We have no encoding issues in the output/input of SVN commands
+putenv('LANG', 'en_US.utf8')
+
+( config, interesting_paths ) = create_config_from_parameters()
+setup_logging(config)
+
+revision_mapper = RevisionMapper(config)
+source_repository = SvnRepository(config.source_repository)
+
+dump_writer = SvnDumpWriter(stdout)
+lump_post_processor = LumpPostProcessor(config, revision_mapper, dump_writer)
+lump_builder = LumpBuilder(source_repository, interesting_paths, lump_post_processor)
+
+revision_handlers_hash = {
+    STRATEGY_DUMP_HEADER:           DumpHeaderGenerator(lump_builder),
+    STRATEGY_IGNORE:                RevisionIgnorer(lump_builder),
+    STRATEGY_SYNTHETIC_DELETES:     SyntheticDeleter(source_repository, lump_builder),
+    STRATEGY_DUMP_SCAN:             DumpFilter(config, source_repository, interesting_paths, lump_builder),
+    STRATEGY_BOOTSTRAP:             BootsTrapper(config, source_repository, interesting_paths, lump_builder)
+}
+
+controller = DumpController(
+    config = config,
+    repository = source_repository,
+    interesting_paths = interesting_paths,
+    revision_handlers_by_strategy = revision_handlers_hash
+)
+
+controller.run()
