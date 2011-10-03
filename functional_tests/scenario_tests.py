@@ -99,7 +99,7 @@ class ScenarioTests(unittest.TestCase):
         self.filter_repo_and_check( [ 'a' ] )
 
         self.assertTrue(env.is_existing_in_rev('a/bla', 1), 'File bla existent in rev 1')
-        self.assertTrue(env.is_existing_in_rev('a', 2), 'Dir a not existent in rev 2')
+        self.assertFalse(env.is_existing_in_rev('a', 2), 'Dir a not existent in rev 2')
         
     def tesl_del_in_target(self):
         env = self.env
@@ -115,7 +115,7 @@ class ScenarioTests(unittest.TestCase):
         self.filter_repo_and_check( [ 'a' ] )
 
         self.assertTrue(env.is_existing_in_rev('a/b/bla', 1), 'File bla existent in rev 1')
-        self.assertTrue(env.is_existing_in_rev('a/b', 2), 'Dir a/b not existent in rev 2')
+        self.assertFalse(env.is_existing_in_rev('a/b', 2), 'Dir a/b not existent in rev 2')
 
     def test_del_over_target(self):
         env = self.env
@@ -133,7 +133,7 @@ class ScenarioTests(unittest.TestCase):
         self.filter_repo_and_check( [ 'a/b' ] )
 
         self.assertTrue(env.is_existing_in_rev('a/b/bla', 2), 'File bla existent in rev 2')
-        self.assertTrue(env.is_existing_in_rev('a/b', 3), 'Dir a/b not existent in rev 3')
+        self.assertFalse(env.is_existing_in_rev('a/b', 3), 'Dir a/b not existent in rev 3')
 
     def test_change_in_target(self):
         env = self.env
