@@ -16,24 +16,28 @@ from sys import stderr
 from subprocess import Popen, check_call, PIPE, STDOUT
 from string import join
 from errno import EAGAIN
+import re
 
 class CheckedCommandFileHandle(object):
 
-    def __init__(self, args, error_fh=stderr):
+    def __init__(self, args, ignore_patterns=[], error_fh=stderr):
+        self.status_ok = True
         self.args = args
+        self.ignore_patterns = ignore_patterns
         self.error_fh = error_fh
         self.process = Popen(args, stdout=PIPE, stderr=PIPE)
         self._make_stderr_non_blocking()
-        self.status_ok = True
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, trace):
-        if exc_type:
+        if exc_value:
             self._empty_stderr()
+            return False
         else:
             self.close()
+            return True
 
     def __iter__(self):
         return self.process.stdout
@@ -62,15 +66,25 @@ class CheckedCommandFileHandle(object):
             if errno == EAGAIN:
                 return
             raise
+        self._validate_error_output(error)
+
+    def _validate_error_output(self, error):
         if not error:
             return
-        if self.status_ok:
-            self.error_fh.write(
-                "Output of command '%s' on STDERR:\n"
-                % ( join(self.args) )
-            )
-            self.status_ok = False
-        self.error_fh.write(error)
+        if error[-1:] == "\n":
+            error = error[:-1]
+        error_lines = error.split("\n")
+        line_ok = False
+        for line in error_lines:
+            line_ok = False
+            for pattern in self.ignore_patterns:
+                if re.search(pattern, line):
+                    line_ok = True
+                    break
+            if not line_ok:
+                cmd = join(self.args, ' ')
+                self.error_fh.write("Output of command '%s' on STDERR:\n%s\n" % ( cmd, error ) )
+                raise Exception("Command '%s' wrote to STDERR (see above)!" % ( cmd ))
 
     def close(self):
         p = self.process
@@ -83,10 +97,5 @@ class CheckedCommandFileHandle(object):
             raise Exception(
                 "Command '%s' exited with status %d"
                 % ( join(self.args), status )
-            )
-        if not self.status_ok:
-            raise Exception(
-                "Command '%s' wrote to STDERR (see above)!"
-                % ( join(self.args) )
             )
 

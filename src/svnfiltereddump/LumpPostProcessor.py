@@ -58,7 +58,7 @@ class LumpPostProcessor(object):
     def _fix_revision_fields(self, lump):
         if lump.has_header('Revision-number'):
             input_revision = int(lump.get_header('Revision-number'))
-            mapped_revision = self.revision_mapper.map_output_rev_for_input_rev(input_revision)
+            mapped_revision = self.revision_mapper.map_new_output_rev_for_input_rev(input_revision)
             lump.set_header('Revision-number', str(mapped_revision))
         if lump.has_header('Node-copyfrom-rev'):
             input_revision = int(lump.get_header('Node-copyfrom-rev'))

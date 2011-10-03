@@ -10,7 +10,7 @@ class RevisionMapperMock(object):
     def __init__(self):
         self.mapped_revs = [ ]
 
-    def map_output_rev_for_input_rev(self, input_rev):
+    def map_new_output_rev_for_input_rev(self, input_rev):
         self.mapped_revs.append(input_rev)
         return input_rev + 3
 

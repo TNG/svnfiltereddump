@@ -28,7 +28,13 @@ class SvnDumpReader(object):
     def _read_headers(self):
         fh = self.file_handle
         header_count = 0
-        for line in fh:
+
+        while True:
+            line = fh.readline()
+            if not line:
+                if header_count > 0:
+                    raise Exception("Found End of file before end of headers!")
+                return
             if line == "\n":
                 if header_count > 0:
                     return
@@ -38,8 +44,6 @@ class SvnDumpReader(object):
                     raise Exception("Found broken header line:\n" + line)
                 self.current_lump.set_header(m.group(1), m.group(2))
                 header_count += 1
-        if header_count > 0:
-            raise Exception("Found End of file before end of headers!")
 
     def _read_properties(self):
         lump = self.current_lump
@@ -89,14 +93,16 @@ class SvnDumpReader(object):
     def _read_field_of_given_size_and_length(self, size):
         lines = [ ]
         length = 0
-        for line in  self.file_handle:
+        while True:
+            line = self.file_handle.readline()
+            if not line:
+                raise Exception("Reached end-of-file while reading field!")
             lines.append(line)
             length += len(line)
             if length == size+1:
                 return ( join(lines, '')[0:-1], length )
             elif length > size+1:
                 raise Exception("Field length did not match expected size!")
-        raise Exception("Reached end-of-file while reading field!")
 
     def _create_content_tin(self):
         lump = self.current_lump

@@ -127,7 +127,10 @@ class SvnRepository(object):
             return 'file'
 
     def get_dump_file_handle_for_revision(self, rev):
-        return CheckedCommandFileHandle([ 'svnadmin', 'dump', '--incremental', '-r', str(rev), self.path ])
+        return CheckedCommandFileHandle(
+            [ 'svnadmin', 'dump', '--incremental', '-r', str(rev), self.path ],
+            [ '^\* Dumped revision \d+\.$' ]
+        )
 
     def get_tree_handle_for_path(self, path, rev):
         args = [ 'svnlook', 'tree', '--full-paths', '-r', str(rev), self.path, path]

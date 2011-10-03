@@ -94,10 +94,9 @@ class TestEnvironment:
     def filter_repo(self, parameters):
         os.chdir(self.work_dir)
 
-        cmd_path = os.path.join(os.path.dirname(__file__), '../src/bin/svnfiltereddump')
+        cmd_path = os.path.join(os.path.dirname(__file__), '../src/filtereddump')
         process = Popen(
-            'svnadmin dump ' + self.source_repo_path + ' 2>/dev/null'
-            + ' | ' + cmd_path + ' ' + join(parameters, ' ')
+            cmd_path + ' ' + self.source_repo_path + ' ' + join(parameters, ' ')
             + ' | svnadmin load --ignore-uuid ' + self.target_repo_path + ' 2>/dev/null',
             shell=True, stdout=self.dev_null, stderr=PIPE
         )

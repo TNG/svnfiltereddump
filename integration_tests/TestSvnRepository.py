@@ -86,8 +86,8 @@ class TestSvnRepository(unittest.TestCase):
         )
 
     def test_get_dump_file_handle_for_revision(self):
-        fh = self.repo.get_dump_file_handle_for_revision(3)
-        dump = fh.read()
+        with self.repo.get_dump_file_handle_for_revision(3) as fh:
+            dump = fh.read()
         normalzied_dump = re.sub('UUID: \S+', 'UUID: XXX',
                           re.sub('svn:date\nV 27\n\S+', 'svn:date\nV 27\nYYY',
                           dump))
