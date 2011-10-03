@@ -11,7 +11,8 @@ class DumpFilter(object):
         self.revision_number = None
         self.lump_builder = lump_builder
 
-    def process_revision(self, revision):
+    def process_revision(self, revision, aux_data):
+        assert aux_data is None
         input_fh = self.source_repository.get_dump_file_handle_for_revision(revision)
         self.dump_reader = SvnDumpReader(input_fh)
         self._process_header_lumps()

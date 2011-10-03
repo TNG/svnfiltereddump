@@ -21,7 +21,7 @@ class TestBootsTrapper(TestCase):
         )
 
     def test_empty(self):
-        self.boots_trapper.process_revision(3)
+        self.boots_trapper.process_revision(3, None)
         self._verfiy_revision_header()
 
     def test_simple_file(self):
@@ -29,7 +29,7 @@ class TestBootsTrapper(TestCase):
         self.repo.tree_by_path_and_revision['a/b'] = { 3: [ 'a/b' ] }
         self.repo.files_by_name_and_revision['a/b'] = { 3: "xxx\n\yyy\n" }
 
-        self.boots_trapper.process_revision(3)
+        self.boots_trapper.process_revision(3, None)
 
         self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
@@ -41,7 +41,7 @@ class TestBootsTrapper(TestCase):
         self.repo.files_by_name_and_revision['a/b/c/x'] = { 3: "xxx" }
         self.repo.files_by_name_and_revision['a/b/c/y'] = { 3: "yyy" }
 
-        self.boots_trapper.process_revision(3)
+        self.boots_trapper.process_revision(3, None)
 
         self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
@@ -59,7 +59,7 @@ class TestBootsTrapper(TestCase):
         self.repo.files_by_name_and_revision['a/b/x/x2'] = { 3: "222" }
         self.repo.files_by_name_and_revision['a/b/y'] = { 3: "yyy" }
 
-        self.boots_trapper.process_revision(3)
+        self.boots_trapper.process_revision(3, None)
 
         self.assertEqual(len(self.builder.call_history), 4)
         self._verfiy_revision_header()

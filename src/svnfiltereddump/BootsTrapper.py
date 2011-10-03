@@ -6,7 +6,8 @@ class BootsTrapper(object):
         self.interesting_paths =interesting_paths
         self.lump_builder = lump_builder
 
-    def process_revision(self, revision):
+    def process_revision(self, revision, aux_data):
+        assert aux_data is None
         builder = self.lump_builder
         builder.revision_header(revision)
         paths_of_interest = sorted(self.interesting_paths.get_interesting_sub_directories(''))
