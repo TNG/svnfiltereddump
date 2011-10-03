@@ -1,4 +1,6 @@
 
+from logging import info
+
 class RevisionMapper(object):
 
     def __init__(self, config):
@@ -28,6 +30,7 @@ class RevisionMapper(object):
         else:
             new_rev = input_rev
         self.revision_map[input_rev] = new_rev
+        info("    Mapped input revsion input revsion %d to output revsion %d." % ( input_rev, new_rev ) )
         self.next_free_rev = new_rev + 1
         return new_rev
 

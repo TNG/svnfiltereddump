@@ -2,6 +2,7 @@
 import tempfile
 import shutil
 import os
+import sys
 import re
 from subprocess import Popen, check_call, PIPE, STDOUT
 from string import join;
@@ -47,9 +48,12 @@ class TestEnvironment:
         check_call( [ 'svnadmin', 'create',  self.target_repo_path ] )
         check_call( [ 'svn', 'co', self.source_repo_url, self.source_repo_working_copy ], stdout=self.dev_null )
 
-        # Make sure we get english error messages - needed in is_existing_in_rev
-        if re.search('utf8', os.getenv('LANG'), re.I) is None:
-            os.putenv('LANG', 'en_US.utf8')
+        os.putenv('LANG', 'en_US.utf8')
+        lib_dirs = sys.path
+        lib_dirs.append(
+            os.path.join(os.path.dirname(__file__), '../src')
+        )
+        os.putenv('PYTHONPATH', join(lib_dirs, ':'))
 
     def destroy(self):
         shutil.rmtree(self.work_dir)
@@ -89,10 +93,11 @@ class TestEnvironment:
 
     def filter_repo(self, parameters):
         os.chdir(self.work_dir)
-        # Temorary mock to test the tests
+
+        cmd_path = os.path.join(os.path.dirname(__file__), '../src/bin/svnfiltereddump')
         process = Popen(
             'svnadmin dump ' + self.source_repo_path + ' 2>/dev/null'
-            + ' | svndumpfilter include ' + join(parameters, ' ')
+            + ' | ' + cmd_path + ' ' + join(parameters, ' ')
             + ' | svnadmin load --ignore-uuid ' + self.target_repo_path + ' 2>/dev/null',
             shell=True, stdout=self.dev_null, stderr=PIPE
         )

@@ -1,5 +1,7 @@
 
 from optparse import OptionParser
+from logging import debug
+from string import join
 
 def _parse_command_line(command_line):
     parser = OptionParser('usage: %prog [options] <absolute repository path> <include path> ...')
@@ -20,16 +22,25 @@ def _parse_command_line(command_line):
     )
     parser.add_option(
         '--drop-empty-revs', action='store_true', dest='drop_empty_revs', default=False,
-        help="Drop revisions with no effect on included paths completely. ",
+        help="Drop revisions with no effect on included paths completely."
     )
     parser.add_option(
         '--renumber-revs', action='store_true', dest='renumber_revs', default=False,
-        help="Renumber revisions - makes only sense with --drop-empty-revs.",
+        help="Renumber revisions - makes only sense with --drop-empty-revs."
     )
     parser.add_option(
         '--start-rev', dest='start_rev', type='int',
         help="Squash the revision history below the given revision. Generate artificial first revision with represents the given input revision.",
         metavar='NUMBER'
+    )
+    parser.add_option(
+        '-q', '--quiet', action='store_true', dest='quiet', default=False,
+        help="Only log errors and warnings on console."
+    )
+    parser.add_option(
+        '-l', '--log-file', dest='log_file',
+        help="Write messages to given log file.",
+        metavar='FILE'
     )
 
     (options, args ) =  parser.parse_args(command_line) 
@@ -56,6 +67,7 @@ def _get_file_as_list(name):
 class Config(object):
 
     def __init__(self, command_line):
+        debug("Command line: %s" % ( join(command_line, ' ' ) ))
         ( options, source_repository, include_paths ) = _parse_command_line(command_line)
 
         self.source_repository = source_repository
@@ -72,3 +84,5 @@ class Config(object):
         self.drop_empty_revs = options.drop_empty_revs
         self.renumber_revs = options.renumber_revs
         self.start_rev = options.start_rev
+        self.quiet = options.quiet
+        self.log_file = options.log_file

@@ -1,4 +1,6 @@
 
+from logging import info
+
 STRATEGY_DUMP_HEADER = 'DUMP_HEADER'
 STRATEGY_IGNORE = 'IGNORE'
 STRATEGY_SYNTHETIC_DELETES = 'SYNTHETIC_DELETES'
@@ -8,10 +10,10 @@ STRATEGY_BOOTSTRAP = 'BOOTSTRAP'
 DUMP_HEADER_PSEUDO_REV = -1
 
 class DumpController(object):
-    def __init__(self, config, repository, intresting_paths, revision_handlers_by_strategy):
+    def __init__(self, config, repository, interesting_paths, revision_handlers_by_strategy):
         self.config = config
         self.repository = repository
-        self.intresting_paths = intresting_paths
+        self.interesting_paths = interesting_paths
         self.revision_handlers_by_strategy = revision_handlers_by_strategy
 
     def _get_strategy_and_aux_data_for_revision(self, rev):
@@ -26,7 +28,7 @@ class DumpController(object):
             if change_type == 'D':
                 continue
             for path in changes_by_type[change_type]:
-                if self.intresting_paths.is_interesting(path):
+                if self.interesting_paths.is_interesting(path):
                     return ( STRATEGY_DUMP_SCAN, None )
 
         if not changes_by_type.has_key('D'):
@@ -34,7 +36,7 @@ class DumpController(object):
 
         delete_paths = [ ]
         for path in changes_by_type['D']:
-            delete_paths += self.intresting_paths.get_interesting_sub_directories(path)
+            delete_paths += self.interesting_paths.get_interesting_sub_directories(path)
         if delete_paths:
             return ( STRATEGY_SYNTHETIC_DELETES, delete_paths )
        
@@ -51,5 +53,6 @@ class DumpController(object):
 
         for revision in xrange(first_revision, last_revision+1):
             ( strategy, aux_data ) = self._get_strategy_and_aux_data_for_revision(revision)
+            info("Processing input revsion %d using strategy %s ..." % ( revision, strategy ) )
             handler = self.revision_handlers_by_strategy[strategy]
             handler.process_revision(revision, aux_data) 

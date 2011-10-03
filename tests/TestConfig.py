@@ -16,6 +16,8 @@ class ConfigTest(TestCase):
         self.assertEqual(config.drop_empty_revs, False)
         self.assertEqual(config.renumber_revs, False)
         self.assertEqual(config.start_rev, None)
+        self.assertEqual(config.quiet, False)
+        self.assertEqual(config.log_file, None)
 
     def test_include_file(self):
         ( fh ) = tempfile.NamedTemporaryFile(delete=False)
@@ -61,6 +63,22 @@ class ConfigTest(TestCase):
     def test_renumber_revs(self):
         config = Config( [ '/repo/path', 'a/b', '--start-rev', '4711' ] )
         self.assertEqual(config.start_rev, 4711)
+
+    def test_quiet(self):
+        config = Config( [ '/repo/path', 'a/b', '--quiet' ] )
+        self.assertEqual(config.quiet, True)
+
+    def test_q(self):
+        config = Config( [ '/repo/path', 'a/b', '-q' ] )
+        self.assertEqual(config.quiet, True)
+
+    def test_log_file(self):
+        config = Config( [ '/repo/path', 'a/b', '--log-file=/some/file' ] )
+        self.assertEqual(config.log_file, '/some/file')
+
+    def test_l(self):
+        config = Config( [ '/repo/path', 'a/b', '-l', '/some/file' ] )
+        self.assertEqual(config.log_file, '/some/file')
 
     # We need: 'assertExits' here!!
     # def test_bad_source_repo_path(self):
