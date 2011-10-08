@@ -161,23 +161,6 @@ class ComandLineFeatureTests(unittest.TestCase):
         self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c1' ] ])
         self.assertEquals(env.get_log_of_revision(2), 'c3')
 
-    def test_renumber_revs(self):
-        env = self.env
-        # Revision 1
-        env.mkdir('a')
-        env.add_file('a/bla', 'xxx')
-        env.commit('c1')
-        # Revision 2
-        env.mkdir('b')
-        env.commit('c2')
-        # Revision 3
-        env.change_file('a/bla', 'yyy')
-        env.commit('c3')
-
-        self.filter_repo_and_check( [ '--renumber-revs', 'a' ] )
-
-        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c1' ] ])
-
     def test_start_rev(self):
         env = self.env
         # Revision 1

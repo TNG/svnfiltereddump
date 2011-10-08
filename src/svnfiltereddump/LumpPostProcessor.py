@@ -1,8 +1,7 @@
 
 class LumpPostProcessor(object):
-    def __init__(self, config, revision_mapper, writer):
+    def __init__(self, config, writer):
         self.config = config
-        self.revision_mapper = revision_mapper
         self.writer = writer
         self.delayed_revision_header = None
 
@@ -19,7 +18,6 @@ class LumpPostProcessor(object):
 
     def _process_lump(self, lump):
         self._fix_length_fields(lump)
-        self._fix_revision_fields(lump)
         self.writer.write_lump(lump)
 
     def _fix_length_fields(self, lump):
@@ -55,12 +53,3 @@ class LumpPostProcessor(object):
         sum_so_far += 10                        # PROPS-END\n
         return sum_so_far
 
-    def _fix_revision_fields(self, lump):
-        if lump.has_header('Revision-number'):
-            input_revision = int(lump.get_header('Revision-number'))
-            mapped_revision = self.revision_mapper.map_new_output_rev_for_input_rev(input_revision)
-            lump.set_header('Revision-number', str(mapped_revision))
-        if lump.has_header('Node-copyfrom-rev'):
-            input_revision = int(lump.get_header('Node-copyfrom-rev'))
-            mapped_revision = self.revision_mapper.get_output_rev_for_input_rev(input_revision)
-            lump.set_header('Node-copyfrom-rev', str(mapped_revision))

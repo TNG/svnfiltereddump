@@ -24,10 +24,6 @@ def _parse_command_line(command_line):
         help="Copy revisions even if they have no effect on included paths at all."
     )
     parser.add_option(
-        '--renumber-revs', action='store_true', dest='renumber_revs', default=False,
-        help="Renumber revisions - makes only sense with --drop-empty-revs."
-    )
-    parser.add_option(
         '--start-rev', dest='start_rev', type='int',
         help="Squash the revision history below the given revision. Generate artificial first revision with represents the given input revision.",
         metavar='NUMBER'
@@ -80,7 +76,6 @@ class Config(object):
         self.exclude_paths = exclude_paths
 
         self.keep_empty_revs = options.keep_empty_revs
-        self.renumber_revs = options.renumber_revs
         self.start_rev = options.start_rev
         self.quiet = options.quiet
         self.log_file = options.log_file

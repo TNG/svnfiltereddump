@@ -53,11 +53,10 @@ logging.info("Command line: " + join(argv, ' '))
 # 2) We have no encoding issues in the output/input of SVN commands
 putenv('LANG', 'en_US.utf8')
 
-revision_mapper = RevisionMapper(config)
 source_repository = SvnRepository(config.source_repository)
 
 dump_writer = SvnDumpWriter(stdout)
-lump_post_processor = LumpPostProcessor(config, revision_mapper, dump_writer)
+lump_post_processor = LumpPostProcessor(config, dump_writer)
 lump_builder = LumpBuilder(source_repository, interesting_paths, lump_post_processor)
 
 revision_handlers_hash = {
