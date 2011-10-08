@@ -4,6 +4,7 @@ import shutil
 import os
 import sys
 import re
+import logging
 from subprocess import Popen, check_call, PIPE, STDOUT
 from string import join;
 
@@ -33,8 +34,20 @@ def get_output_of_command(args):
     return output
 
 
+class TempChDir(object):
+    def __init__(self, dir):
+        self.old_path = os.getcwd()
+        os.chdir(dir)
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_value, trace):
+        os.chdir(self.old_path)
+        return False
+
+
 class TestEnvironment:
     def __init__(self):
+        logging.basicConfig(level=logging.DEBUG)
         self.work_dir = tempfile.mkdtemp()
         self.tmp_index = 0
         self.source_repo_path = self.work_dir + '/source_repo'
@@ -49,19 +62,14 @@ class TestEnvironment:
         check_call( [ 'svn', 'co', self.source_repo_url, self.source_repo_working_copy ], stdout=self.dev_null )
 
         os.putenv('LANG', 'en_US.utf8')
-        lib_dirs = sys.path
-        lib_dirs.append(
-            os.path.join(os.path.dirname(__file__), '../src')
-        )
-        os.putenv('PYTHONPATH', join(lib_dirs, ':'))
 
     def destroy(self):
         shutil.rmtree(self.work_dir)
         self = None
 
     def mkdir(self, name):
-        os.chdir(self.source_repo_working_copy)
-        check_call( [ 'svn', 'mkdir', '--parents', name ], stdout=self.dev_null)
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'mkdir', '--parents', name ], stdout=self.dev_null)
 
     def mkdir_target(self, name):
         url = self.target_repo_url + '/' + name
@@ -69,43 +77,44 @@ class TestEnvironment:
 
     def add_file(self, name, content):
         self.change_file(name, content)
-        check_call( [ 'svn', 'add', name ], stdout=self.dev_null)
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'add', name ], stdout=self.dev_null)
 
     def copy_file(self, source, target):
-        check_call( [ 'svn', 'copy', source, target ], stdout=self.dev_null)
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'copy', source, target ], stdout=self.dev_null)
 
     def rm_file(self, name):
-        check_call( [ 'svn', 'rm', name ], stdout=self.dev_null)
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'rm', name ], stdout=self.dev_null)
 
     def propset(self, path, key, value):
-        os.chdir(self.source_repo_working_copy)
-        check_call( [ 'svn', 'propset', key, value, path], stdout=self.dev_null)
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'propset', key, value, path], stdout=self.dev_null)
 
     def change_file(self, name, content):
-        os.chdir(self.source_repo_working_copy)
-        fh = open(name, 'w')
-        fh.write(content)
-        fh.close()
+        with TempChDir(self.source_repo_working_copy):
+            with open(name, 'w') as fh:
+                fh.write(content)
 
     def commit(self, comment):
-        os.chdir(self.source_repo_working_copy)
-        check_call( [ 'svn', 'commit', '-m', comment ], stdout=self.dev_null )
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'commit', '-m', comment ], stdout=self.dev_null )
 
     def filter_repo(self, parameters):
-        os.chdir(self.work_dir)
-
-        cmd_path = os.path.join(os.path.dirname(__file__), '../src/filtereddump')
-        process = Popen(
-            cmd_path + ' ' + self.source_repo_path + ' ' + join(parameters, ' ')
-            + ' | svnadmin load --ignore-uuid ' + self.target_repo_path + ' 2>/dev/null',
-            shell=True, stdout=self.dev_null, stderr=PIPE
-        )
-        output = process.stderr.read()
-        status = os.waitpid(process.pid, 0)[1]
-        if status == 0:
-            return None
-        else:
-            return output
+        with TempChDir(self.source_repo_working_copy):
+            cmd_path = os.path.join(os.path.dirname(__file__), '../src/filtereddump')
+            process = Popen(
+                cmd_path + ' ' + self.source_repo_path + ' ' + join(parameters, ' ')
+                + ' | svnadmin load --ignore-uuid ' + self.target_repo_path + ' 2>/dev/null',
+                shell=True, stdout=self.dev_null, stderr=PIPE
+            )
+            output = process.stderr.read()
+            status = os.waitpid(process.pid, 0)[1]
+            if status == 0:
+                return None
+            else:
+                return output
 
     def is_existing_in_rev(self, path, rev):
         url = '%s/%s@%d' % ( self.target_repo_url, path, rev )

@@ -33,7 +33,6 @@ def setup_early_logging():
 def setup_final_logging(config):
     if config.quiet:
         console_handler.setLevel(logging.WARNING)
-    # console_formatter = logging.Formatter(' %(levelname)s %(message)s')
     
     if config.log_file:
         log_name = basename(argv[0])
@@ -45,7 +44,6 @@ def setup_final_logging(config):
         logger.addHandler(log_file_handler)
 
 setup_early_logging()
-
 ( config, interesting_paths ) = create_config_from_parameters()
 setup_final_logging(config)
 logging.info("Command line: " + join(argv, ' '))
