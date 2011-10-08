@@ -7,11 +7,11 @@ class LumpPostProcessor(object):
         self.delayed_revision_header = None
 
     def write_lump(self, lump):
-        if self.config.drop_empty_revs:
+        if not self.config.keep_empty_revs:
             if lump.has_header('Revision-number'):
                 self.delayed_revision_header = lump
                 return
-            elif self.delayed_revision_header:
+            if self.delayed_revision_header:
                 self._process_lump(self.delayed_revision_header)
                 self.delayed_revision_header = None
 

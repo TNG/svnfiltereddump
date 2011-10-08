@@ -13,7 +13,7 @@ class ConfigTest(TestCase):
         self.assertEqual(config.source_repository, '/repo/path')
         self.assertEqual(sorted(config.include_paths), [ 'a/b/c', 'x/y' ])
         self.assertEqual(config.exclude_paths, [ ])
-        self.assertEqual(config.drop_empty_revs, False)
+        self.assertEqual(config.keep_empty_revs, False)
         self.assertEqual(config.renumber_revs, False)
         self.assertEqual(config.start_rev, None)
         self.assertEqual(config.quiet, False)
@@ -52,9 +52,9 @@ class ConfigTest(TestCase):
         self.assertEqual(sorted(config.exclude_paths), [ 'x/y', 'x1', 'x2' ])
         os.remove(fh.name)
 
-    def test_drop_empty_revs(self):
-        config = Config( [ '/repo/path', 'a/b', '--drop-empty-revs' ] )
-        self.assertEqual(config.drop_empty_revs, True)
+    def test_keep_empty_revs(self):
+        config = Config( [ '/repo/path', 'a/b', '--keep-empty-revs' ] )
+        self.assertEqual(config.keep_empty_revs, True)
 
     def test_renumber_revs(self):
         config = Config( [ '/repo/path', 'a/b', '--renumber-revs' ] )

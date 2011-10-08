@@ -25,6 +25,8 @@ class TestLumpPostProcessor(TestCase):
         self.processor = LumpPostProcessor(self.config, self.rev_mapper, self.writer)
 
     def test_dont_drop_empty_revs(self):
+        self.config.keep_empty_revs = True
+
         lump = SvnLump()
         lump.set_header('Revision-number', '12')
         self.processor.write_lump(lump)
@@ -43,8 +45,6 @@ class TestLumpPostProcessor(TestCase):
         self.assertEqual(self.writer.lumps[2].get_header('Node-kind'), 'file')
 
     def test_drop_empty_revs(self):
-        self.config.drop_empty_revs = True
-
         lump = SvnLump()
         lump.set_header('Revision-number', '12')
         self.processor.write_lump(lump)
@@ -114,6 +114,8 @@ class TestLumpPostProcessor(TestCase):
         self.assertEqual(self.writer.lumps[0].get_header('Content-length'), '30')
 
     def test_map_revisions(self):
+        self.config.keep_empty_revs = True
+
         lump = SvnLump()
         lump.set_header('Revision-number', '12')
 

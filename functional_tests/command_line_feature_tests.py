@@ -138,7 +138,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c3')
 
-        self.filter_repo_and_check( [ 'a' ] )
+        self.filter_repo_and_check( [ 'a', '--keep-empty-revs' ] )
 
         self.check_log_of_file_in_rev('a/bla', 3, [ [ 3, 'c3' ], [ 1, 'c1' ] ])
         self.assertEquals(env.get_log_of_revision(2), 'c2')
@@ -156,7 +156,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c3')
 
-        self.filter_repo_and_check( [ '--drop-empty-revs', 'a' ] )
+        self.filter_repo_and_check( [ 'a' ] )
 
         self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c1' ] ])
         self.assertEquals(env.get_log_of_revision(2), 'c3')
@@ -174,7 +174,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c3')
 
-        self.filter_repo_and_check( [ '--drop-empty-revs', '--renumber-revs', 'a' ] )
+        self.filter_repo_and_check( [ '--renumber-revs', 'a' ] )
 
         self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c1' ] ])
 

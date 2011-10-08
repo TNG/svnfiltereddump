@@ -20,8 +20,8 @@ def _parse_command_line(command_line):
         metavar='FILE'
     )
     parser.add_option(
-        '--drop-empty-revs', action='store_true', dest='drop_empty_revs', default=False,
-        help="Drop revisions with no effect on included paths completely."
+        '--keep-empty-revs', action='store_true', dest='keep_empty_revs', default=False,
+        help="Copy revisions even if they have no effect on included paths at all."
     )
     parser.add_option(
         '--renumber-revs', action='store_true', dest='renumber_revs', default=False,
@@ -79,7 +79,7 @@ class Config(object):
             exclude_paths += _get_file_as_list(file)
         self.exclude_paths = exclude_paths
 
-        self.drop_empty_revs = options.drop_empty_revs
+        self.keep_empty_revs = options.keep_empty_revs
         self.renumber_revs = options.renumber_revs
         self.start_rev = options.start_rev
         self.quiet = options.quiet
