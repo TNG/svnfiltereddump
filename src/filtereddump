@@ -58,6 +58,8 @@ source_repository = SvnRepository(config.source_repository)
 dump_writer = SvnDumpWriter(stdout)
 lump_post_processor = LumpPostProcessor(config, dump_writer)
 lump_builder = LumpBuilder(source_repository, interesting_paths, lump_post_processor)
+parent_directory_lump_generator = ParentDirectoryLumpGenerator(interesting_paths, lump_builder)
+lump_post_processor.parent_directory_lump_generator = parent_directory_lump_generator
 
 revision_handlers_hash = {
     STRATEGY_DUMP_HEADER:           DumpHeaderGenerator(lump_builder),

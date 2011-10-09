@@ -4,17 +4,26 @@ class LumpPostProcessor(object):
         self.config = config
         self.writer = writer
         self.delayed_revision_header = None
+        self.parent_dir_lumps_must_be_injected = True
+        self.parent_directory_lump_generator = None
 
     def write_lump(self, lump):
-        if not self.config.keep_empty_revs:
-            if lump.has_header('Revision-number'):
-                self.delayed_revision_header = lump
-                return
-            if self.delayed_revision_header:
-                self._process_lump(self.delayed_revision_header)
-                self.delayed_revision_header = None
+        if lump.has_header('Revision-number'):
+            self.delayed_revision_header = lump
+            if self.config.keep_empty_revs:
+                self._flush_delayed_revision_header()
+            if self.parent_dir_lumps_must_be_injected:
+                if self.config.create_parent_dirs:
+                    self.parent_directory_lump_generator.write_lumps()
+                self.parent_dir_lumps_must_be_injected = False
+        else:
+            self._flush_delayed_revision_header()
+            self._process_lump(lump)
 
-        self._process_lump(lump)
+    def _flush_delayed_revision_header(self):
+        if self.delayed_revision_header:
+            self._process_lump(self.delayed_revision_header)
+            self.delayed_revision_header = None
 
     def _process_lump(self, lump):
         self._fix_length_fields(lump)

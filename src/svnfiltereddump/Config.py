@@ -29,6 +29,10 @@ def _parse_command_line(command_line):
         metavar='NUMBER'
     )
     parser.add_option(
+        '--no-extra-mkdirs', action='store_false', dest='create_parent_dirs', default=True,
+        help="By default extra nodes are injected to create the paraent directories of all paths in the include list. Use this option to swtich it off."
+    )
+    parser.add_option(
         '-q', '--quiet', action='store_true', dest='quiet', default=False,
         help="Only log errors and warnings on console."
     )
@@ -77,5 +81,6 @@ class Config(object):
 
         self.keep_empty_revs = options.keep_empty_revs
         self.start_rev = options.start_rev
+        self.create_parent_dirs = options.create_parent_dirs
         self.quiet = options.quiet
         self.log_file = options.log_file

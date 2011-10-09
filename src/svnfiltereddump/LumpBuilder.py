@@ -17,6 +17,13 @@ class LumpBuilder(object):
         lump.set_header('Node-action', 'delete')
         self.dump_writer.write_lump(lump)
 
+    def mkdir(self, path):
+        lump = SvnLump()
+        lump.set_header('Node-path', normpath(path))
+        lump.set_header('Node-kind', 'dir')
+        lump.set_header('Node-action', 'add')
+        self.dump_writer.write_lump(lump)
+
     def add_path_from_source_repository(self, kind, path, from_path, from_rev):
         assert kind == 'file' or kind =='dir'
 

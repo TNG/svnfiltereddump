@@ -7,6 +7,8 @@ class LumpBuilderMock(object):
         self.call_history = [ ]
     def delete_path(self, path):
         self.call_history.append( [ 'delete_path', path ] )
+    def mkdir(self, path):
+        self.call_history.append( [ 'mkdir', path ] )
     def add_path_from_source_repository(self, kind, path, source_path, source_rev):
         self.call_history.append( [ 'add_path_from_source_repository',  kind, path, source_path, source_rev ] )
     def change_lump_from_add_lump(self, lump):

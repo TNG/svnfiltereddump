@@ -107,6 +107,16 @@ class TestLumpLumpBuilder(TestCase):
         self.assertEqual(lump.get_header('Node-path'), 'a/b/c')
         self.assertEqual(lump.get_header('Node-action'), 'delete')
 
+    def test_mkdir(self):
+        self.builder.mkdir('a/b/c')
+
+        self.assertEqual(len(self.writer.lumps), 1)
+        lump = self.writer.lumps[0]
+        self.assertEqual(lump.get_header_keys(), [ 'Node-path', 'Node-kind', 'Node-action' ])
+        self.assertEqual(lump.get_header('Node-path'), 'a/b/c')
+        self.assertEqual(lump.get_header('Node-kind'), 'dir')
+        self.assertEqual(lump.get_header('Node-action'), 'add')
+
     def test_add_file_from_source_repo(self):
         self.builder.add_path_from_source_repository('file', 'a/b', 'file/in/source/repo_rev17', 17)
         

@@ -60,9 +60,26 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.add_file('x/bar', 'ZZZ')
         env.commit('c1')
 
+        self.filter_repo_and_check( [ 'x/a', 'x/foo' ] ) 
+
+        self.assertTrue(env.is_existing_in_rev('x/a/bla', 1), 'File bla was copied')
+        self.assertTrue(env.is_existing_in_rev('x/foo', 1), 'File foo was copied')
+        self.assertFalse(env.is_existing_in_rev('x/b/blub', 1), 'File blub was NOT copied')
+        self.assertFalse(env.is_existing_in_rev('x/bar', 1), 'File bar was NOT copied')
+
+    def test_include_with_no_mkdirs(self):
+        env = self.env
+        env.mkdir('x/a')
+        env.mkdir('x/b')
+        env.add_file('x/a/bla', 'xxx')
+        env.add_file('x/b/blub', 'yyy')
+        env.add_file('x/foo', 'zzz')
+        env.add_file('x/bar', 'ZZZ')
+        env.commit('c1')
+
         env.mkdir_target('x') # Rev 1 in target
 
-        self.filter_repo_and_check( [ 'x/a', 'x/foo' ] ) 
+        self.filter_repo_and_check( [ '--no-extra-mkdirs', 'x/a', 'x/foo' ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 2), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 2), 'File foo was copied')
@@ -79,15 +96,14 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.add_file('x/bar', 'ZZZ')
         env.commit('c1')
 
-        env.mkdir_target('x') # Rev 1 in target
         include_file = env.create_tmp_file("x/a\n" + "x/foo\n")
 
         self.filter_repo_and_check( [ '--include-file', include_file ] ) 
 
-        self.assertTrue(env.is_existing_in_rev('x/a/bla', 2), 'File bla was copied')
-        self.assertTrue(env.is_existing_in_rev('x/foo', 2), 'File foo was copied')
-        self.assertFalse(env.is_existing_in_rev('x/b/blub', 2), 'File blub was NOT copied')
-        self.assertFalse(env.is_existing_in_rev('x/bar', 2), 'File bar was NOT copied')
+        self.assertTrue(env.is_existing_in_rev('x/a/bla', 1), 'File bla was copied')
+        self.assertTrue(env.is_existing_in_rev('x/foo', 1), 'File foo was copied')
+        self.assertFalse(env.is_existing_in_rev('x/b/blub', 1), 'File blub was NOT copied')
+        self.assertFalse(env.is_existing_in_rev('x/bar', 1), 'File bar was NOT copied')
 
     def test_exclude(self):
         env = self.env

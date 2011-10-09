@@ -1,3 +1,20 @@
+
+#
+# Purpose:
+#
+# When we process the output of "svnadmin dump" we want
+# to 'stream' some parts ('content') of it via limited
+# size buffer to the output. Other content we just want
+# to discard.
+#
+# Regardless if we stream or discard: The file handle of
+# the input file handle must be at the right position just
+# after the content once we are done with it.
+#
+# That logic is encapsuled here. Once we identified a
+# piece of 'content' we create a ContentTin with it.
+#
+
 class NonOut(object):
     def write(self, what):
         pass

@@ -128,12 +128,10 @@ class ScenarioTests(unittest.TestCase):
         env.rm_file('a')
         env.commit('c2')
 
-        env.mkdir_target('a') # Rev 1 in target
-
         self.filter_repo_and_check( [ 'a/b' ] )
 
-        self.assertTrue(env.is_existing_in_rev('a/b/bla', 2), 'File bla existent in rev 2')
-        self.assertFalse(env.is_existing_in_rev('a/b', 3), 'Dir a/b not existent in rev 3')
+        self.assertTrue(env.is_existing_in_rev('a/b/bla', 1), 'File bla existent in rev 1')
+        self.assertFalse(env.is_existing_in_rev('a/b', 2), 'Dir a/b not existent in rev 2')
 
     def test_change_in_target(self):
         env = self.env

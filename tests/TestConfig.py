@@ -17,6 +17,7 @@ class ConfigTest(TestCase):
         self.assertEqual(config.start_rev, None)
         self.assertEqual(config.quiet, False)
         self.assertEqual(config.log_file, None)
+        self.assertEqual(config.create_parent_dirs, True)
 
     def test_include_file(self):
         ( fh ) = tempfile.NamedTemporaryFile(delete=False)
@@ -70,6 +71,11 @@ class ConfigTest(TestCase):
     def test_l(self):
         config = Config( [ '/repo/path', 'a/b', '-l', '/some/file' ] )
         self.assertEqual(config.log_file, '/some/file')
+
+    def test_no_extra_mkdirs(self):
+        config = Config( [ '/repo/path', 'a/b', '--no-extra-mkdirs' ] )
+        self.assertEqual(config.create_parent_dirs, False)
+
 
     # We need: 'assertExits' here!!
     # def test_bad_source_repo_path(self):

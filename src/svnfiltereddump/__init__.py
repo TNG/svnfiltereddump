@@ -15,7 +15,7 @@ from RevisionIgnorer import RevisionIgnorer
 
 # Build the lumps
 from LumpBuilder import LumpBuilder
-# Fix revision numbers, length fields, drop empty revisions
+# Fix length fields, drop empty revisions
 from LumpPostProcessor import LumpPostProcessor
 
 #
@@ -33,3 +33,4 @@ from Config import Config
 from InterestingPaths import InterestingPaths
 from CheckedCommandFileHandle import CheckedCommandFileHandle
 from ContentTin import ContentTin
+from ParentDirectoryLumpGenerator import ParentDirectoryLumpGenerator
