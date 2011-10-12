@@ -57,6 +57,7 @@ class TestEnvironment:
     def __exit__(self):
         shutil.rmtree(self.work_dir)
         self = None
+        return False
 
     def mkdir(self, name):
         os.chdir(self.repo_working_copy)

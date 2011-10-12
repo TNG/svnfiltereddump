@@ -36,6 +36,7 @@ class ContentTin:
     def __exit__(self, exc_type, exc_value, trace):
         if not exc_type and not self.used:
             self.empty_to()
+        return False
    
     def empty_to(self, out_fh = NonOut()):
         if self.used:

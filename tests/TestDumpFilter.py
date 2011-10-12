@@ -256,7 +256,7 @@ class TestDumpFilter(TestCase):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B
         self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
-        self.repo.properties_path_and_revision['x/y'] = { 2: { } }
+        self.repo.properties_by_path_and_revision['x/y'] = { 2: { } }
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
@@ -270,7 +270,7 @@ class TestDumpFilter(TestCase):
         self.interesting_paths.mark_path_as_interesting('x/y')
         self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B
         self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
-        self.repo.properties_path_and_revision['x/y'] = { 2: { } }
+        self.repo.properties_by_path_and_revision['x/y'] = { 2: { } }
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
@@ -282,7 +282,7 @@ class TestDumpFilter(TestCase):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B_WITH_CHANGE
         self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
-        self.repo.properties_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
+        self.repo.properties_by_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
 
         self.dump_filter.process_revision(3, None)
 
@@ -311,9 +311,9 @@ class TestDumpFilter(TestCase):
         self.repo.tree_by_path_and_revision['x/y'] = { 2: [ 'x/y/', 'x/y/c1', 'x/y/c2' ] }
         self.repo.files_by_name_and_revision['x/y/c1'] = { 2: "xxx\n\yy1\n" }
         self.repo.files_by_name_and_revision['x/y/c2'] = { 2: "xxx\n\yy2\n" }
-        self.repo.properties_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
-        self.repo.properties_path_and_revision['x/y/c1'] = { 2: { 'prop2': 'value2' } }
-        self.repo.properties_path_and_revision['x/y/c2'] = { 2: { } }
+        self.repo.properties_by_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
+        self.repo.properties_by_path_and_revision['x/y/c1'] = { 2: { 'prop2': 'value2' } }
+        self.repo.properties_by_path_and_revision['x/y/c2'] = { 2: { } }
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()

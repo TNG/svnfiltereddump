@@ -18,6 +18,20 @@ class ConfigTest(TestCase):
         self.assertEqual(config.quiet, False)
         self.assertEqual(config.log_file, None)
         self.assertEqual(config.create_parent_dirs, True)
+        self.assertEqual(config.drop_old_tags_and_branches, False)
+
+        self.assertTrue(config.is_path_tag_or_branch('tags/something'))
+        self.assertTrue(config.is_path_tag_or_branch('prefix/tags/something'))
+        self.assertTrue(config.is_path_tag_or_branch('blub/branches/bla'))
+
+        self.assertFalse(config.is_path_tag_or_branch('blub/branches'))
+        self.assertFalse(config.is_path_tag_or_branch('trunk'))
+        self.assertFalse(config.is_path_tag_or_branch('bla'))
+        self.assertFalse(config.is_path_tag_or_branch('tags'))
+        self.assertFalse(config.is_path_tag_or_branch('tagsX/something'))
+        self.assertFalse(config.is_path_tag_or_branch('prefix/tags'))
+        self.assertFalse(config.is_path_tag_or_branch('tags/something/bla'))
+        self.assertFalse(config.is_path_tag_or_branch('prefix/branches/something/bla'))
 
     def test_include_file(self):
         ( fh ) = tempfile.NamedTemporaryFile(delete=False)
@@ -76,6 +90,16 @@ class ConfigTest(TestCase):
         config = Config( [ '/repo/path', 'a/b', '--no-extra-mkdirs' ] )
         self.assertEqual(config.create_parent_dirs, False)
 
+    def test_drop_old_tags_and_branches(self):
+        config = Config( [ '/repo/path', 'a/b', '--drop-old-tags-and-branches' ] )
+        self.assertTrue(config.drop_old_tags_and_branches)
+
+    def test_custom_tag_and_branches(self):
+        config = Config( [ '/repo/path', 'a/b', '--tag-or-branch-dir', 'bla', '--tag-or-branch-dir', 'branches' ] )
+        self.assertTrue(config.is_path_tag_or_branch('foo/bla/bar'))
+        self.assertTrue(config.is_path_tag_or_branch('foo/branches/bar'))
+        self.assertFalse(config.is_path_tag_or_branch('foo/trunk/bar'))
+        self.assertFalse(config.is_path_tag_or_branch('foo/tags/bar'))
 
     # We need: 'assertExits' here!!
     # def test_bad_source_repo_path(self):

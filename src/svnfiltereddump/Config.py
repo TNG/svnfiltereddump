@@ -33,6 +33,15 @@ def _parse_command_line(command_line):
         help="By default extra nodes are injected to create the paraent directories of all paths in the include list. Use this option to swtich it off."
     )
     parser.add_option(
+        '--drop-old-tags-and-branches', action='store_true', dest='drop_old_tags_and_branches', default=False,
+        help="Use with the --start-rev option. Automatically exclude data in tags and branches directories refering to data before and up to the start revision."
+    )
+    parser.add_option(
+        '--tag-or-branch-dir', action='append', dest='custom_tags_and_branches_dirs', default=[],
+        help='Use with --drop-old-tags-and-branches. Overwrites the list of directory names, which contain tags and branches in your repository. Add one --tag-or-branch-dir option for each name you want - including \'tags\' and \'branches\' if you want to extend the orignal list.',
+        metavar='NAME'
+    )
+    parser.add_option(
         '-q', '--quiet', action='store_true', dest='quiet', default=False,
         help="Only log errors and warnings on console."
     )
@@ -49,7 +58,13 @@ def _parse_command_line(command_line):
     source_repository = args[0]
     if not source_repository.startswith('/'):
         parser.error('Please supply ABSOLUTE path to repository!')
-    include_paths = args[1:]
+
+    include_paths = [ ]
+    for path in args[1:]:
+        if path[0] == '/':
+            include_paths.append(path[1:])
+        else:
+            include_paths.append(path)
 
     return ( options, source_repository, include_paths )
     
@@ -84,3 +99,26 @@ class Config(object):
         self.create_parent_dirs = options.create_parent_dirs
         self.quiet = options.quiet
         self.log_file = options.log_file
+
+        self.drop_old_tags_and_branches = options.drop_old_tags_and_branches
+
+        self.tag_and_branch_dict = { }
+        if options.custom_tags_and_branches_dirs:
+            for name in options.custom_tags_and_branches_dirs:
+                self.tag_and_branch_dict[name] = True
+        else:
+            self.tag_and_branch_dict = { 'tags': True, 'branches': True }
+
+    def is_path_tag_or_branch(self, path):
+        levels_below_tag_or_branch = None
+        for element in path.split('/'):
+            if levels_below_tag_or_branch is not None:
+                levels_below_tag_or_branch += 1
+                if levels_below_tag_or_branch > 1:
+                    return False
+            if self.tag_and_branch_dict.has_key(element):
+                levels_below_tag_or_branch = 0
+        if levels_below_tag_or_branch:
+            return True
+        else:
+            return False

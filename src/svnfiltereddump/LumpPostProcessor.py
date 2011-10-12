@@ -1,4 +1,6 @@
 
+from logging import info
+
 class LumpPostProcessor(object):
     def __init__(self, config, writer):
         self.config = config
@@ -7,8 +9,18 @@ class LumpPostProcessor(object):
         self.parent_dir_lumps_must_be_injected = True
         self.parent_directory_lump_generator = None
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, trace):
+        if self.delayed_revision_header:
+            info('Dropping empty revision.');
+        return False
+
     def write_lump(self, lump):
         if lump.has_header('Revision-number'):
+            if self.delayed_revision_header:
+                info('Dropping empty revision.');
             self.delayed_revision_header = lump
             if self.config.keep_empty_revs:
                 self._flush_delayed_revision_header()

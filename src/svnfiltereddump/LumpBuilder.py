@@ -1,12 +1,15 @@
 
 from os.path import normpath
 from copy import copy
+from logging import info
 
 from SvnLump import SvnLump
 from SvnRepository import SvnRepository
 
+
 class LumpBuilder(object):
-    def __init__(self, source_repository, interesting_paths, dump_writer):
+    def __init__(self, config, source_repository, interesting_paths, dump_writer):
+        self.config = config
         self.source_repository = source_repository
         self.interesting_paths = interesting_paths
         self.dump_writer = dump_writer
@@ -25,6 +28,9 @@ class LumpBuilder(object):
         self.dump_writer.write_lump(lump)
 
     def add_path_from_source_repository(self, kind, path, from_path, from_rev):
+        if self._is_obsolete_tag_or_branch_copy(path, from_rev):
+            self._handle_obsolete_tag_or_branch(path)
+            return
         assert kind == 'file' or kind =='dir'
 
         path = normpath(path)
@@ -44,6 +50,17 @@ class LumpBuilder(object):
         lump.properties = repo.get_properties_of_path(from_path, from_rev)
         self.dump_writer.write_lump(lump)
 
+    def _is_obsolete_tag_or_branch_copy(self, path, from_rev):
+        if not self.config.start_rev:
+            return False
+        if not self.config.drop_old_tags_and_branches:
+            return False
+        return self.config.is_path_tag_or_branch(path)
+
+    def _handle_obsolete_tag_or_branch(self, path):
+        info('Excluding obsolete tag/branch: ' + path)
+        self.interesting_paths.mark_path_as_boring(path)
+
     def change_lump_from_add_lump(self, sample_lump):
         lump = copy(sample_lump)
         lump.set_header('Node-action', 'change')
@@ -55,14 +72,18 @@ class LumpBuilder(object):
                 lump.delete_header(header_name)
         self.dump_writer.write_lump(lump)
 
-    def revision_header(self, rev):
+    def revision_header(self, rev, log_message=None):
         lump = SvnLump()
         lump.set_header('Revision-number', str(rev))
         rev_info = self.source_repository.get_revision_info(rev)
+        if log_message:
+            new_log_message = log_message
+        else:
+            new_log_message = rev_info.log_message
         lump.properties = {
             'svn:author': rev_info.author,
             'svn:date': rev_info.date,
-            'svn:log': rev_info.log_message
+            'svn:log': new_log_message
         }
         self.dump_writer.write_lump(lump)
 
@@ -79,8 +100,13 @@ class LumpBuilder(object):
         self.dump_writer.write_lump(lump)
 
     def add_tree_from_source(self, path, from_path, from_rev):
-        if path[-1:] != '/':
+        if self._is_obsolete_tag_or_branch_copy(path, from_rev):
+            self._handle_obsolete_tag_or_branch(path)
+            return
+        if path[-1:] != '/' and len(path)>0:
             path += '/'
+        if from_path[-1:] != '/':
+            from_path += '/'
         with self.source_repository.get_tree_handle_for_path(from_path, from_rev) as tree_handle:
             for from_sub_path in tree_handle:
                 if from_sub_path[-1:] == '/':
@@ -89,5 +115,7 @@ class LumpBuilder(object):
                 else:
                     kind = 'file'
                 sub_path = path + from_sub_path[len(from_path):]
+                if sub_path == '':
+                    continue
                 if self.interesting_paths.is_interesting(sub_path):
                     self.add_path_from_source_repository(kind, sub_path, from_sub_path, from_rev)

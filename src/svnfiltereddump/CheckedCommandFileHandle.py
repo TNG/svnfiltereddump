@@ -34,10 +34,9 @@ class CheckedCommandFileHandle(object):
     def __exit__(self, exc_type, exc_value, trace):
         if exc_value:
             self._empty_stderr()
-            return False
         else:
             self.close()
-            return True
+        return False
 
     def __iter__(self):
         return self.process.stdout

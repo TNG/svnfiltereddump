@@ -1,5 +1,6 @@
 
 from StringIO import StringIO
+from svnfiltereddump import ContentTin
 
 class _FakeIterator(object):
     def __init__(self, items):
@@ -16,7 +17,7 @@ class _FakeIterator(object):
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_value, trace):
-        pass
+        return False
 
 class RevisionInfo(object):
     def __init__(self, author, date, log_message):
@@ -28,8 +29,7 @@ class RepositoryMock(object):
     def __init__(self):
         self.dumps_by_revision = { }
         self.files_by_name_and_revision = { }
-        self.dirs_by_name_and_revision = { }
-        self.properties_path_and_revision = { }
+        self.properties_by_path_and_revision = { }
         self.tree_by_path_and_revision = { }
         self.revision_properties_by_revision = { }
 
@@ -43,7 +43,7 @@ class RepositoryMock(object):
     def get_properties_of_path(self, path, rev):
         if path[-1:] == '/':
             path = path[:-1]
-        return self.properties_path_and_revision[path][rev]
+        return self.properties_by_path_and_revision[path][rev]
 
     def get_type_of_path(self, path, rev):
         if path[-1:] == '/':
@@ -65,3 +65,6 @@ class RepositoryMock(object):
     def get_revision_info(self, rev):
         ( author, date, log ) = self.revision_properties_by_revision[rev]
         return RevisionInfo(author, date, log)
+
+    def get_uuid(self):
+        return 'fake-uuid'

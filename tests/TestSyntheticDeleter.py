@@ -52,4 +52,4 @@ class TestSyntheticDeleter(TestCase):
         ] )
 
     def _verfiy_revision_header(self):
-        self.assertEqual(self.builder.call_history[0], [ 'revision_header', 3 ])
+        self.assertEqual(self.builder.call_history[0], [ 'revision_header', 3, 'None' ])

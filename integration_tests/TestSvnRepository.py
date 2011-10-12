@@ -5,7 +5,7 @@ from StringIO import StringIO
 
 from svn_repo_test_environment import TestEnvironment
 
-from svnfiltereddump import SvnRepository
+from svnfiltereddump import SvnRepository, SvnDumpReader
 
 class TestSvnRepository(unittest.TestCase):
     env = None
@@ -86,64 +86,45 @@ class TestSvnRepository(unittest.TestCase):
         )
 
     def test_get_dump_file_handle_for_revision(self):
+        lumps = [ ]
         with self.repo.get_dump_file_handle_for_revision(3) as fh:
-            dump = fh.read()
-        normalzied_dump = re.sub('UUID: \S+', 'UUID: XXX',
-                          re.sub('svn:date\nV 27\n\S+', 'svn:date\nV 27\nYYY',
-                          dump))
-        self.assertEqual(normalzied_dump, """SVN-fs-dump-format-version: 2
-
-UUID: XXX
-
-Revision-number: 3
-Prop-content-length: 117
-Content-length: 117
-
-K 7
-svn:log
-V 14
-c3
-extra long
-
-K 10
-svn:author
-V 8
-testuser
-K 8
-svn:date
-V 27
-YYY
-PROPS-END
-
-Node-path: a/x1
-Node-kind: file
-Node-action: add
-Prop-content-length: 10
-Text-content-length: 6
-Text-content-md5: cde333fcdaa0fbf09280e457333d72fd
-Text-content-sha1: 9558e4c4678259123b0553229c304db1a2ed4754
-Content-length: 16
-
-PROPS-END
-x11111
-
-Node-path: a/x2
-Node-kind: file
-Node-action: add
-Prop-content-length: 10
-Text-content-length: 6
-Text-content-md5: 56a20ee450b0936c3a976dcdaddb2dd1
-Text-content-sha1: e1b9077d3220006a05f7e740c6ce88bd242a0dfd
-Content-length: 16
-
-PROPS-END
-x22222
-
-Node-path: a/bla
-Node-action: delete
-
-
-""")
+            reader = SvnDumpReader(fh)
+            self._check_lump(
+                reader.read_lump(),
+                [ 'SVN-fs-dump-format-version', '2' ],
+                { },
+                None
+            )
+            self._check_lump(
+                reader.read_lump(),
+                [ 'UUID', 'XXX' ],
+                { },
+                None
+            )
+            self._check_lump(
+                reader.read_lump(),
+                [ 'Revision-number', '3' ],
+                { 'svn:log': "c3\nextra long\n", 'svn:author': 'testuser', 'svn:date': 'XXX' },
+                None
+            )
+            self._check_lump(
+                reader.read_lump(),
+                [ 'Node-path', 'a/x1', 'Node-kind', 'file', 'Node-action', 'add',
+                  'Text-content-md5', 'cde333fcdaa0fbf09280e457333d72fd',
+                  'Text-content-sha1', '9558e4c4678259123b0553229c304db1a2ed4754'
+                ],
+                { },
+                'x11111'
+            )
+            self._check_lump(
+                reader.read_lump(),
+                [ 'Node-path', 'a/x2', 'Node-kind', 'file', 'Node-action', 'add',
+                  'Text-content-md5', '56a20ee450b0936c3a976dcdaddb2dd1',
+                  'Text-content-sha1', 'e1b9077d3220006a05f7e740c6ce88bd242a0dfd'
+                ],
+                { },
+                'x22222'
+            )
 
     def test_get_tree_handle_for_path(self):
         list = [ ]
@@ -156,6 +137,8 @@ Node-action: delete
         info = self.repo.get_revision_info(3)
         self.assertEqual(info.author, 'testuser')
         self.assertEqual(info.log_message, "c3\nextra long\n")
+        if not re.search('^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$', info.date):
+            self.fail("Date '%s' expected format" % ( info.date ))
 
     def test_get_uuid(self):
         uuid = self.repo.get_uuid()
@@ -164,3 +147,29 @@ Node-action: delete
     def test_get_youngest_revision(self):
         last_rev = self.repo.get_youngest_revision()
         self.assertEqual(last_rev, 3)
+
+    def _check_lump(self, lump, expected_headers, expected_properties, expected_text):
+        headers = [ ]
+        for key in lump.get_header_keys():
+            if key in [ 'Content-length', 'Text-content-length', 'Prop-content-length' ]:
+                continue
+            expected_key = expected_headers[0];
+            self.assertEqual(key, expected_key)
+            expected_value = expected_headers[1]
+            if expected_value != 'XXX':
+                self.assertEqual(lump.get_header(key), expected_value)
+            expected_headers = expected_headers[2:]
+        self.assertEqual(expected_headers, []) 
+
+        self.assertEqual(sorted(lump.properties.keys()), sorted(expected_properties.keys()))
+        for key in lump.properties:
+            if expected_properties[key] != 'XXX':
+                self.assertEqual(lump.properties[key], expected_properties[key])
+
+        if expected_text is None:
+            self.assertEqual(lump.content, None)
+        else:
+            fh = StringIO()
+            lump.content.empty_to(fh)
+            fh.seek(0)
+            self.assertEqual(fh.read(), expected_text)

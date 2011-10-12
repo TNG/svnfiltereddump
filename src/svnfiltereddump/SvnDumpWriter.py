@@ -1,4 +1,6 @@
 
+from logging import info
+
 class SvnDumpWriter(object):
     def __init__(self, file_handle):
         self.file_handle = file_handle

@@ -3,8 +3,9 @@ from os import waitpid
 from string import join
 from subprocess import Popen, check_call, PIPE, STDOUT
 from hashlib import md5
-from ContentTin import ContentTin
+import re
 
+from ContentTin import ContentTin
 from CheckedCommandFileHandle import CheckedCommandFileHandle
 
 
@@ -24,6 +25,7 @@ class TreeHandle(object):
         return self
     def __exit__(self, exc_type, exc_value, trace):
         self.file_handle = None
+        return False
     def next(self):
         line = self.file_handle.readline()
         if not line:
@@ -113,7 +115,7 @@ class SvnRepository(object):
         process.stderr.close()
         status = waitpid(process.pid, 0)[1]
         if status:
-            if error.startswith('svnlook: File not found:'):
+            if re.match('svnlook: (?:.*)File not found:', error):
                 return None
             else:
                  raise Exception(
@@ -129,11 +131,14 @@ class SvnRepository(object):
     def get_dump_file_handle_for_revision(self, rev):
         return CheckedCommandFileHandle(
             [ 'svnadmin', 'dump', '--incremental', '-r', str(rev), self.path ],
-            [
+            [   # SVN 1.6
                 '^\* Dumped revision \d+\.$',
                 '^WARNING: Referencing data in revision \d+, which is older than the oldest$',
                 '^WARNING: dumped revision \(\d+\)\.  Loading this dump into an empty repository$',
-                '^WARNING: will fail\.$'
+                '^WARNING: will fail\.$',
+                # SVN 1.7
+                'WARNING 0x0000: Referencing data in revision \d+, which is older than the oldest dumped revision \(r\d+\)',
+                'WARNING 0x0000: The range of revisions dumped contained references to copy sources outside that range\.',
             ]
         )
 
@@ -145,19 +150,14 @@ class SvnRepository(object):
         return TreeHandle(fh, command)
 
     def get_revision_info(self, rev):
-        with CheckedCommandFileHandle([ 'svnlook', 'info', '-r', str(rev), self.path ]) as fh:
-            line = fh.readline()
-            author = line[:-1]
-            line = fh.readline()
-            date = line[:-1]
-            line = fh.readline()
-            log_size = int(line[:-1])
-            log_message = fh.read(log_size)
-            fh.read()
+        properties = { }
+        for property_name in [ 'svn:author', 'svn:date', 'svn:log' ]:
+            with CheckedCommandFileHandle([ 'svnlook', 'pg', '--revprop', '-r', str(rev), self.path, property_name]) as fh:
+                properties[property_name] = fh.read()
         return RevisionInfo(
-            author = author,
-            date = date,
-            log_message = log_message
+            author = properties['svn:author'],
+            date = properties['svn:date'],
+            log_message = properties['svn:log'],
         )
 
     def get_uuid(self):

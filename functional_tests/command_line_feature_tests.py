@@ -13,11 +13,6 @@ class ComandLineFeatureTests(unittest.TestCase):
     def tearDown(self):
         self.env.destroy()
 
-    def filter_repo_and_check(self, params):
-        error = self.env.filter_repo(params)
-        if error is not None:
-            self.fail("Filter failed: " + error)
-
     def check_log_of_file_in_rev(self, name, rev, exected_log):
         ( parsed_log, error ) = self.env.get_log_of_file_in_rev(name, rev)
         if error is None:
@@ -41,7 +36,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'zzz')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'a' ] )
+        env.filter_repo( [ 'a' ] )
 
         self.assertTrue(env.is_existing_in_rev('a', 1), 'Dir a was copied in rev 1')
         self.assertFalse(env.is_existing_in_rev('b', 1), 'Dir b was not copied in rev 1')
@@ -60,7 +55,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.add_file('x/bar', 'ZZZ')
         env.commit('c1')
 
-        self.filter_repo_and_check( [ 'x/a', 'x/foo' ] ) 
+        env.filter_repo( [ 'x/a', 'x/foo' ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 1), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 1), 'File foo was copied')
@@ -79,7 +74,7 @@ class ComandLineFeatureTests(unittest.TestCase):
 
         env.mkdir_target('x') # Rev 1 in target
 
-        self.filter_repo_and_check( [ '--no-extra-mkdirs', 'x/a', 'x/foo' ] ) 
+        env.filter_repo( [ '--no-extra-mkdirs', 'x/a', 'x/foo' ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 2), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 2), 'File foo was copied')
@@ -98,7 +93,7 @@ class ComandLineFeatureTests(unittest.TestCase):
 
         include_file = env.create_tmp_file("x/a\n" + "x/foo\n")
 
-        self.filter_repo_and_check( [ '--include-file', include_file ] ) 
+        env.filter_repo( [ '--include-file', include_file ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 1), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 1), 'File foo was copied')
@@ -115,7 +110,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.add_file('x/bar', 'ZZZ')
         env.commit('c1')
 
-        self.filter_repo_and_check( [ 'x', '--exclude', 'x/b', '--exclude', 'x/bar' ] ) 
+        env.filter_repo( [ 'x', '--exclude', 'x/b', '--exclude', 'x/bar' ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 1), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 1), 'File foo was copied')
@@ -134,7 +129,7 @@ class ComandLineFeatureTests(unittest.TestCase):
 
         exclude_file = env.create_tmp_file("x/b\n" + "x/bar\n")
 
-        self.filter_repo_and_check( [ 'x', '--exclude-file', exclude_file ] ) 
+        env.filter_repo( [ 'x', '--exclude-file', exclude_file ] ) 
 
         self.assertTrue(env.is_existing_in_rev('x/a/bla', 1), 'File bla was copied')
         self.assertTrue(env.is_existing_in_rev('x/foo', 1), 'File foo was copied')
@@ -154,7 +149,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c3')
 
-        self.filter_repo_and_check( [ 'a', '--keep-empty-revs' ] )
+        env.filter_repo( [ 'a', '--keep-empty-revs' ] )
 
         self.check_log_of_file_in_rev('a/bla', 3, [ [ 3, 'c3' ], [ 1, 'c1' ] ])
         self.assertEquals(env.get_log_of_revision(2), 'c2')
@@ -172,7 +167,7 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c3')
 
-        self.filter_repo_and_check( [ 'a' ] )
+        env.filter_repo( [ 'a' ] )
 
         self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c1' ] ])
         self.assertEquals(env.get_log_of_revision(2), 'c3')
@@ -190,13 +185,87 @@ class ComandLineFeatureTests(unittest.TestCase):
         env.change_file('a/bla', 'zzz')
         env.commit('c3')
 
-        self.filter_repo_and_check( [ '--start-rev', '2', 'a' ] )
+        env.filter_repo( [ '--start-rev', '2', 'a' ] )
 
         self.assertEquals(env.get_file_content_in_rev('a/bla', 1), 'yyy', 'File a/bla correct in rev 1')
-        self.check_log_of_file_in_rev('a/bla', 1, [ [ 1, 'c2' ] ])
+        self.check_log_of_file_in_rev('a/bla', 1, [ [ 1, 'svnfiltereddump boots trap revision' ] ])
         self.assertEquals(env.get_file_content_in_rev('a/bla', 2), 'zzz', 'File a/bla correct in rev 2')
-        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'c2' ] ])
+        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c3' ], [ 1, 'svnfiltereddump boots trap revision' ] ])
 
+    def test_drop_old_tags_and_branches(self):
+        env = self.env
+        # Revision dropped
+        env.mkdir('trunk')
+        env.mkdir('tags')
+        env.mkdir('branches')
+        env.add_file('trunk/bla', 'xxx')
+        env.commit('c1')
+        # Revision dropped
+        env.update()
+        env.copy_path('trunk', 'branches/very_old');
+        env.copy_path('trunk', 'tags/OLD1');
+        env.commit('c2')
+        # Revision 1 --- start_rev ---
+        env.copy_path('trunk', 'branches/still_old');
+        env.commit('c3')
+        # Revision 2
+        env.update()
+        env.change_file('trunk/bla', 'zzz')
+        env.change_file('branches/still_old/bla', 'yyy');
+        env.commit('c4')
+        # Revision 3
+        env.update()
+        env.copy_path('trunk', 'branches/new');
+        env.copy_path('trunk', 'tags/NEW1');
+        env.move_path('tags/OLD1', 'tags/RENAMED_BUT_STILL_OLD')
+        env.change_file('branches/new/bla', 'zzz1')
+        env.commit('c5')
+
+        env.filter_repo( [ '--start-rev', '3', '--drop-old-tags-and-branches', '/' ] )
+
+        self.assertEqual(env.get_file_content_in_rev('trunk/bla', 1), 'xxx', 'File trunk/bla correct in rev 1')
+        self.assertEqual(env.get_file_content_in_rev('trunk/bla', 2), 'zzz', 'File trunk/bla correct in rev 2')
+        self.check_log_of_file_in_rev('trunk/bla', 3, [ [ 2, 'c4' ], [ 1, 'svnfiltereddump boots trap revision' ] ] )
+
+        self.assertEqual(env.get_file_content_in_rev('branches/new/bla', 3), 'zzz1', 'File branches/new/bla correct in rev 3')
+        self.assertEqual(env.get_file_content_in_rev('tags/NEW1/bla', 3), 'zzz', 'File tags/NEW1/bla correct in rev 2')
         
+        self.assertFalse(env.is_existing_in_rev('branches/very_old', 1), 'Very old brach dropped')
+        self.assertFalse(env.is_existing_in_rev('branches/still_old', 1), 'Still old brach dropped')
+        self.assertFalse(env.is_existing_in_rev('tags/OLD1', 1), 'Old tag dropped')
+        self.assertFalse(env.is_existing_in_rev('tags/RENAMED_BUT_STILL_OLD', 3), 'Renamed old tag dropped')
+
+    def test_drop_old_tags_and_branches_custom_names(self):
+        env = self.env
+        # Revision dropped
+        env.mkdir('my_tags')
+        env.mkdir('my_branches')
+        env.mkdir('tags')
+        env.mkdir('branches')
+        env.mkdir('trunk')
+        env.add_file('trunk/bla', 'xxx')
+        env.commit('c1')
+        # Revision dropped
+        env.copy_path('trunk', 'my_tags/OLD_TAG')
+        env.copy_path('trunk', 'my_branches/OLD_BRANCH')
+        env.copy_path('trunk', 'tags/not_really_a_tag')
+        env.copy_path('trunk', 'branches/not_really_a_branch')
+        env.commit('c2')
+        # Revision 1 --- start_rev ---
+        env.add_file('boring', 'zzz')
+        env.commit('c3')
+
+        env.filter_repo( [
+            '--start-rev', '3', '--drop-old-tags-and-branches',
+            '--tag-or-branch-dir', 'my_tags', '--tag-or-branch-dir', 'my_branches', '/'
+        ] )
+
+        self.assertEquals(env.get_file_content_in_rev('trunk/bla', 1), 'xxx', 'File trunk/bla correct in rev 1')
+        self.assertEquals(env.get_file_content_in_rev('tags/not_really_a_tag/bla', 1), 'xxx', 'File tags/not_really_a_tag/bla correct in rev 1')
+        self.assertEquals(env.get_file_content_in_rev('branches/not_really_a_branch/bla', 1), 'xxx', 'File branches/not_really_a_branch/bla correct in rev 1')
+        
+        self.assertFalse(env.is_existing_in_rev('my_tags/OLD_TAG', 1), 'Old tag dropped')
+        self.assertFalse(env.is_existing_in_rev('my_branches/OLD_BRANCH', 1), 'Old branch dropped')
+
 if __name__ == '__main__':
     unittest.main()

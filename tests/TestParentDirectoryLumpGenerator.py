@@ -19,6 +19,11 @@ class TestParentDirectoryLumpGenerator(TestCase):
         self.generator.write_lumps()
         self.assertEqual(self.builder.call_history, [ ])
 
+    def test_all_intersting(self):
+        self.interesting_paths.mark_path_as_interesting('')
+        self.generator.write_lumps()
+        self.assertEqual(self.builder.call_history, [ ])
+
     def test_simple(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
 

@@ -5,6 +5,19 @@ from svnfiltereddump import InterestingPaths
 
 class InterestingPathsTests(TestCase):
 
+    def test_empty_string(self):
+        interesting_path = InterestingPaths()
+        interesting_path.mark_path_as_interesting('')
+
+        self.assertTrue(interesting_path.is_interesting('a'))
+        self.assertTrue(interesting_path.is_interesting('b'))
+
+        dirs = sorted(interesting_path.get_interesting_sub_directories('a'))
+        self.assertEqual(dirs, [ 'a' ])
+
+        dirs = sorted(interesting_path.get_interesting_sub_directories(''))
+        self.assertEqual(dirs, [ '' ])
+
     def test_simple_include(self):
         interesting_path = InterestingPaths()
         interesting_path.mark_path_as_interesting('a/b/c')

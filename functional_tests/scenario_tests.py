@@ -13,11 +13,6 @@ class ScenarioTests(unittest.TestCase):
     def tearDown(self):
         self.env.destroy()
 
-    def filter_repo_and_check(self, params):
-        error = self.env.filter_repo(params)
-        if error is not None:
-            self.fail("Filter failed: " + error)
-
     def check_log_of_file_in_rev(self, name, rev, exected_log):
         ( parsed_log, error ) = self.env.get_log_of_file_in_rev(name, rev)
         if error is None:
@@ -39,10 +34,10 @@ class ScenarioTests(unittest.TestCase):
         env.propset('a/bla', 'some_prop', 'prop_value')
         env.commit('c1')
         # Revision 2
-        env.copy_file('a/bla', 'a/blub')
+        env.copy_path('a/bla', 'a/blub')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'a' ] )
+        env.filter_repo( [ 'a' ] )
 
         self.assertEquals(env.get_file_content_in_rev('a/bla', 1), 'xxx', 'File a/bla correct in rev 1')
         self.assertFalse(env.is_existing_in_rev('a/blub', 1), 'File blub not existent in rev 1')
@@ -60,10 +55,10 @@ class ScenarioTests(unittest.TestCase):
         env.propset('a/bla', 'some_prop', 'prop_value')
         env.commit('c1')
         # Revision 2
-        env.copy_file('a/bla', 'b/blub')
+        env.copy_path('a/bla', 'b/blub')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'b' ] )
+        env.filter_repo( [ 'b' ] )
 
         self.assertFalse(env.is_existing_in_rev('a/bla', 1), 'File bla not existent in rev 1')
         self.assertEquals(env.get_file_content_in_rev('b/blub', 2), 'xxx', 'File b/blub correct in rev 2')
@@ -79,10 +74,10 @@ class ScenarioTests(unittest.TestCase):
         env.add_file('a/bla', 'xxx')
         env.commit('c1')
         # Revision 2
-        env.copy_file('a/bla', 'b/x/blub')
+        env.copy_path('a/bla', 'b/x/blub')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'b', '--exclude', 'b/x' ] )
+        env.filter_repo( [ 'b', '--exclude', 'b/x' ] )
 
         self.assertFalse(env.is_existing_in_rev('b/x/blub', 1), 'File blub not existent in rev 2')
 
@@ -96,7 +91,7 @@ class ScenarioTests(unittest.TestCase):
         env.rm_file('a')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'a' ] )
+        env.filter_repo( [ 'a' ] )
 
         self.assertTrue(env.is_existing_in_rev('a/bla', 1), 'File bla existent in rev 1')
         self.assertFalse(env.is_existing_in_rev('a', 2), 'Dir a not existent in rev 2')
@@ -112,7 +107,7 @@ class ScenarioTests(unittest.TestCase):
         env.rm_file('a/b')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'a' ] )
+        env.filter_repo( [ 'a' ] )
 
         self.assertTrue(env.is_existing_in_rev('a/b/bla', 1), 'File bla existent in rev 1')
         self.assertFalse(env.is_existing_in_rev('a/b', 2), 'Dir a/b not existent in rev 2')
@@ -128,7 +123,7 @@ class ScenarioTests(unittest.TestCase):
         env.rm_file('a')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'a/b' ] )
+        env.filter_repo( [ 'a/b' ] )
 
         self.assertTrue(env.is_existing_in_rev('a/b/bla', 1), 'File bla existent in rev 1')
         self.assertFalse(env.is_existing_in_rev('a/b', 2), 'Dir a/b not existent in rev 2')
@@ -143,7 +138,7 @@ class ScenarioTests(unittest.TestCase):
         env.change_file('a/bla', 'yyy')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'a' ] )
+        env.filter_repo( [ 'a' ] )
 
         self.assertEquals(env.get_file_content_in_rev('a/bla', 1), 'xxx', 'File a/bla correct in rev 1')
         self.assertEquals(env.get_file_content_in_rev('a/bla', 2), 'yyy', 'File a/bla correct in rev 2')
@@ -155,11 +150,11 @@ class ScenarioTests(unittest.TestCase):
         env.add_file('a/bla', 'xxx')
         env.commit('c1')
         # Revision 2
-        env.copy_file('a/bla', 'a/blub')
+        env.copy_path('a/bla', 'a/blub')
         env.change_file('a/blub', 'yyy')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'a' ] )
+        env.filter_repo( [ 'a' ] )
 
         self.assertEquals(env.get_file_content_in_rev('a/blub', 2), 'yyy', 'File a/blub correct in rev 2')
         self.check_log_of_file_in_rev('a/blub', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
@@ -172,14 +167,44 @@ class ScenarioTests(unittest.TestCase):
         env.add_file('a/bla', 'xxx')
         env.commit('c1')
         # Revision 2
-        env.copy_file('a/bla', 'b/blub')
+        env.copy_path('a/bla', 'b/blub')
         env.change_file('b/blub', 'yyy')
         env.commit('c2')
 
-        self.filter_repo_and_check( [ 'b' ] )
+        env.filter_repo( [ 'b' ] )
 
         self.assertEquals(env.get_file_content_in_rev('b/blub', 2), 'yyy', 'File a/blub correct in rev 2')
         self.check_log_of_file_in_rev('b/blub', 2, [ [ 2, 'c2' ] ])
+
+    def test_drop_old_tags_and_branches_with_mixed_revisions(self):
+        # The special thing in this test are the missing 'svn update' commands
+        # before branch/tag creation. The actual behaviour is NOT desirable
+        # - but we can't do any better in this case!
+        env = self.env
+        # Revision dropped
+        env.mkdir('trunk')
+        env.mkdir('tags')
+        env.mkdir('branches')
+        env.add_file('trunk/bla', 'xxx')
+        env.commit('c1')
+        # Revision 1 --- start_rev ---
+        env.change_file('trunk/bla', 'zzz')
+        env.commit('c2')
+        # Revision 2
+        env.copy_path('trunk', 'branches/new');
+        env.copy_path('trunk', 'tags/NEW1');
+        env.commit('c3')
+        # Dropped as empty
+        env.change_file('branches/new/bla', 'zzz1')
+        env.commit('c4')
+
+        env.filter_repo( [ '--start-rev', '2', '--drop-old-tags-and-branches', '/' ] )
+
+        self.assertEquals(env.get_file_content_in_rev('trunk/bla', 1), 'zzz', 'File trunk/bla correct in rev 1')
+        self.check_log_of_file_in_rev('trunk/bla', 2, [ [ 1, 'svnfiltereddump boots trap revision' ] ])
+        
+        self.assertFalse(env.is_existing_in_rev('branches/new', 2), 'Sorry - new but classified as old due to mixed revisions working copy (1)')
+        self.assertFalse(env.is_existing_in_rev('tags/NEW1', 2), 'Sorry - new but classified as old due to mixed revisions working copy (1)')
 
 if __name__ == '__main__':
     unittest.main()

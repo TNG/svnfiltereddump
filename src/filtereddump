@@ -56,24 +56,24 @@ putenv('LANG', 'en_US.utf8')
 source_repository = SvnRepository(config.source_repository)
 
 dump_writer = SvnDumpWriter(stdout)
-lump_post_processor = LumpPostProcessor(config, dump_writer)
-lump_builder = LumpBuilder(source_repository, interesting_paths, lump_post_processor)
-parent_directory_lump_generator = ParentDirectoryLumpGenerator(interesting_paths, lump_builder)
-lump_post_processor.parent_directory_lump_generator = parent_directory_lump_generator
+with LumpPostProcessor(config, dump_writer) as lump_post_processor:
+    lump_builder = LumpBuilder(config, source_repository, interesting_paths, lump_post_processor)
+    parent_directory_lump_generator = ParentDirectoryLumpGenerator(interesting_paths, lump_builder)
+    lump_post_processor.parent_directory_lump_generator = parent_directory_lump_generator
 
-revision_handlers_hash = {
-    STRATEGY_DUMP_HEADER:           DumpHeaderGenerator(lump_builder),
-    STRATEGY_IGNORE:                RevisionIgnorer(lump_builder),
-    STRATEGY_SYNTHETIC_DELETES:     SyntheticDeleter(source_repository, lump_builder),
-    STRATEGY_DUMP_SCAN:             DumpFilter(config, source_repository, interesting_paths, lump_builder),
-    STRATEGY_BOOTSTRAP:             BootsTrapper(config, source_repository, interesting_paths, lump_builder)
-}
+    revision_handlers_hash = {
+        STRATEGY_DUMP_HEADER:           DumpHeaderGenerator(lump_builder),
+        STRATEGY_IGNORE:                RevisionIgnorer(lump_builder),
+        STRATEGY_SYNTHETIC_DELETES:     SyntheticDeleter(source_repository, lump_builder),
+        STRATEGY_DUMP_SCAN:             DumpFilter(config, source_repository, interesting_paths, lump_builder),
+        STRATEGY_BOOTSTRAP:             BootsTrapper(config, source_repository, interesting_paths, lump_builder)
+    }
 
-controller = DumpController(
-    config = config,
-    repository = source_repository,
-    interesting_paths = interesting_paths,
-    revision_handlers_by_strategy = revision_handlers_hash
-)
+    controller = DumpController(
+        config = config,
+        repository = source_repository,
+        interesting_paths = interesting_paths,
+        revision_handlers_by_strategy = revision_handlers_hash
+    )
 
-controller.run()
+    controller.run()

@@ -80,9 +80,13 @@ class TestEnvironment:
         with TempChDir(self.source_repo_working_copy):
             check_call( [ 'svn', 'add', name ], stdout=self.dev_null)
 
-    def copy_file(self, source, target):
+    def copy_path(self, source, target):
         with TempChDir(self.source_repo_working_copy):
             check_call( [ 'svn', 'copy', source, target ], stdout=self.dev_null)
+
+    def move_path(self, source, target):
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'move', source, target ], stdout=self.dev_null)
 
     def rm_file(self, name):
         with TempChDir(self.source_repo_working_copy):
@@ -97,6 +101,10 @@ class TestEnvironment:
             with open(name, 'w') as fh:
                 fh.write(content)
 
+    def update(self):
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'update' ], stdout=self.dev_null )
+
     def commit(self, comment):
         with TempChDir(self.source_repo_working_copy):
             check_call( [ 'svn', 'commit', '-m', comment ], stdout=self.dev_null )
@@ -106,15 +114,15 @@ class TestEnvironment:
             cmd_path = os.path.join(os.path.dirname(__file__), '../src/filtereddump')
             process = Popen(
                 cmd_path + ' ' + self.source_repo_path + ' ' + join(parameters, ' ')
-                + ' | svnadmin load --ignore-uuid ' + self.target_repo_path + ' 2>/dev/null',
+                + ' | tee -a /tmp/dumps | svnadmin load --ignore-uuid ' + self.target_repo_path
+                + ' >&2',
                 shell=True, stdout=self.dev_null, stderr=PIPE
             )
-            output = process.stderr.read()
+            for line in process.stderr:
+                print line
             status = os.waitpid(process.pid, 0)[1]
-            if status == 0:
-                return None
-            else:
-                return output
+            if status != 0:
+                raise Exception("Failed to filter repository!");
 
     def is_existing_in_rev(self, path, rev):
         url = '%s/%s@%d' % ( self.target_repo_url, path, rev )
@@ -124,11 +132,13 @@ class TestEnvironment:
         status = os.waitpid(process.pid, 0)[1]
         if status == 0:
             return True
-        elif re.search('non-existent in that revision', output) is not None:
+        elif re.search('non-existent in that revision', output) is not None: # SVN 1.6
+            return False
+        elif re.search("Could not list all targets because some targets don't exist", output) is not None: # SVN 1.7
             return False
         else:
             raise Exception(
-                "svn ls on path '%s' in revision %d returned unexpeted result:\n%s" %
+                "svn ls on path '%s' in revision %d returned unexpected result:\n%s" %
                 ( path, rev, output )
             )
 

@@ -9,7 +9,7 @@ class BootsTrapper(object):
     def process_revision(self, revision, aux_data):
         assert aux_data is None
         builder = self.lump_builder
-        builder.revision_header(revision)
+        builder.revision_header(revision, 'svnfiltereddump boots trap revision')
         paths_of_interest = sorted(self.interesting_paths.get_interesting_sub_directories(''))
         for path in paths_of_interest:
             kind = self.source_repository.get_type_of_path(path, revision)

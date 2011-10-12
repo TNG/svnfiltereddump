@@ -68,5 +68,5 @@ class TestBootsTrapper(TestCase):
         self.assertEqual(self.builder.call_history[3], [ 'add_tree_from_source', 'a/b/y', 'a/b/y', 3 ])
 
     def _verfiy_revision_header(self):
-        self.assertEqual(self.builder.call_history[0], [ 'revision_header', 3 ])
+        self.assertEqual(self.builder.call_history[0], [ 'revision_header', 3, 'svnfiltereddump boots trap revision' ])
 
