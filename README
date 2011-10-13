@@ -1,0 +1,13 @@
+
+Please look at the filtereddump man page.
+If it is not installed on your system, display
+it by typing
+
+    man man/man1/filtereddump.1
+
+or
+
+    nroff -man man/man1/filtereddump.1 | less
+
+in directory containing this README. In contains
+also basic installation instructions.

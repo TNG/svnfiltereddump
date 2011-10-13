@@ -1,0 +1,279 @@
+.TH FILTEREDDUMP "1" "October 2011" "svnfiltereddump tool 1.0" "User Commands"
+.SH NAME
+filtereddump \- extracts parts from Subversion repositories
+.SH SYNOPSIS
+.B filtereddump [\fIOPTIONS\fR] \fISOURCE-REPO\fR \fIPATH\fR ... \e
+.br
+  | svnadmin load ...
+.br
+.B filtereddump [\fIOPTIONS\fR] \fISOURCE-REPO\fR --include-file \fIFILE\fR ... \e
+.br
+  | svnadmin load ...
+.SH DESCRIPTION
+.PP
+The filtereddump tool is meant to extract portions of repositories of the
+Subversion source control system. It's output can be loaded with Subversion's
+\fBsvnadmin load\fR command into a new Subversion repository. The source
+repository must be given on the command line. A list of paths to extract
+may given on command line or in one or more input file(s). It is possible
+to forget the revision history before a given start revision.
+.SH OPTIONS
+.PP
+.TP
+\fB-h\fR, \fB--help\fR
+Shows the usage and help text and exits.
+.TP
+\fB--include-file=FILE\fR
+Read paths to include from given file.
+.TP
+\fB--exclude=PATH\fR
+Exclude given path during filtering.
+.TP
+\fB--exclude-file=FILE\fR
+Read paths to exclude from given file.
+.TP
+\fB--keep-empty-revs\fR
+Copy revisions even if they have no effect on included paths at all. Without
+this option the command operates similar to svndumpfilter with the
+\fB--drop-empty-revs\fR option.
+.TP
+\fB--start-rev=NUMBER\fR
+Squash the revision history below the given revision. Generate a artificial
+first revision with represents the given revision. If you use this option
+you should exclude tags and branches referring to the old revisions too.
+Otherwise your new repository may get huge because every tag or branch
+based on obsolete revisions will be included as full copy. Consider to
+use the \fB--drop-old-tags-and-branches\fR option.
+.TP
+\fB--no-extra-mkdirs\fR
+By default the first revision dumped will include nodes to create the
+parent directories of the extracted directories. Most of the time this
+fine. However loading such a dump into a repository, which is not empty
+may fail because one of the directories exists already. If that happens
+use this flag to disable this feature. However with is option you are
+responsible to create all the needed parent directories in the target
+repository.
+.TP
+\fB--drop-old-tags-and-branches\fR
+Use this option with the --start-rev option. Automatically exclude
+all tags and branches, which are based on a revision older than
+the given start revision. Please note that tagging and branching in
+Subversion is done by convention. So this feature is just a heuristics,
+which may fail in a number of ways. The directories excluded are reported
+on STDERR and should carefully checked.
+.TP
+\fB--tag-or-branch-dir=NAME\fR
+Use this option with \fB--drop-old-tags-and-branches\fR. By default
+directories called \fBtags\fR and \fBbranches\fR are assumed to contain
+tags and branches. You may overwrite the list by giving one or more
+of this options. If at least one \fB--tag-or-branch-dir\fR option is
+given you always start with an empty list. E.g if you just run with
+\'--tag-or-branch-dir=branches\' directories called \'tags\' are no longer
+considered by the \fB--drop-old-tags-and-branches\fR option.
+.TP
+\fB-q\fR, \fB--quiet\fR
+Only report errors and warnings on console.
+.TP
+\fB-l FILE\fR, \fB--log-file=FILE\fR
+Write messages to given log file.
+.SH EXAMPLES
+.PP
+The most common use case is to extract some trees from an existing
+repository. Assume you have a repository at /repos/old. It contains
+two modules module/a and module/b - both with there own trunk/tags/branches
+structure - and you want to isolate this two modules in their own repository
+/repos/new. You can do this:
+.IP
+svnadmin create /repos/new
+.br
+filtereddump /repos/old module/a module/b \e
+.br
+  | svnadmin load --ignore-uuid /repos/new
+.PP
+Things get a little more complicated if the two modules share one
+trunk/tags/branches structure with some other modules. So we first need
+a list of tags/branches we are actually interested in:
+.IP
+last_rev=`svnlook youngest /repos/old`
+.br
+svnlook tree -r $last_rev --full-paths \e
+.br
+  | grep -E '^branches/[^/]+/module/[ab]/$' >list
+.br
+svnlook tree -r $last_rev --full-paths \e
+.br
+  | grep -E '^tags/[^/]+/module/[ab]$' >>list
+.br
+echo trunk/module/a >>list
+.br
+echo trunk/module/b >>list
+.PP
+Now we can use this lists to get our target repository as above:
+.IP
+svnadmin create /repos/new
+.br
+filtereddump /repos/old --include-file list \e
+.br
+  | svnadmin load --ignore-uuid /repos/new
+.PP
+Now lets assume we want to get rid of ancient revision history before the
+revision 120232. When we can do this:
+.IP
+svnadmin create /repos/new
+.br
+filtereddump /repos/old --start-rev 120232 --drop-old-tags-and-branches / \e
+.br
+  | svnadmin load --ignore-uuid /repos/new
+.PP
+It's also possible to merge two repositories. This is easy if the paths
+are all different. If the paths you import from two repositories have
+a common prefix (e.g. trunk/...) things are more interesting. Assume we
+want to import the path common/prefix/somewhere/a from /repos/old_a and
+common/prefix/elsewhere/b from /repos/old_b to /repos/new. If we do it
+as above the \fBsvnadmin load\fR will fail because it tries to create the
+directory common which was already created by the first one. You may
+have found the option \fB--no-extra-mkdirs\fR already. However if
+we just give this option, for the second repository we fail again - this
+time because nobody created common/prefix/elsewhere. So we have to do
+this manually like this:
+.IP
+svnadmin create /repos/new
+.br
+filtereddump /repos/old_a common/prefix/somewhere/a \e
+.br
+  | svnadmin load --ignore-uuid /repos/new
+.br
+svn mkdir -m 'merging repos' file:///repos/new/common/prefix/elsewhere
+.br
+filtereddump --no-extra-mkdirs /repos/old_b common/prefix/elsewhere/b \e
+.br
+  | svnadmin load --ignore-uuid /repos/new
+.SH MANUAL INSTALLATION INSTRUCTIONS
+Sometimes you may have to bring this tool to a machine without root
+permissions or Internet access. In this case follow this check list:
+.TP
+.B Prerequisite: You need a UNIX-like box.
+.TT
+Linux will work almost certainly. Other UNIX-like should work without or
+with minor adaption. Systems with backslashes in their path names or without
+IPC via pipes will never work.
+.TP
+.B Prerequisite: locale en_US.utf8 must be installed. 
+.TT
+See the Warnings and Limitations section if you need to know what this
+about.
+.TP
+.B Prerequisite: Python 2.6 or high must be installed.
+.TT
+In doubt run the tests.
+.TP
+.B Prerequisite: Subversion must be installed
+.TT
+The commands svn, svnadmin, and svnlook mustbe included in the default
+search path ($PATH). Version 1.6.x and 1.7.x are believed to work.
+Again in doubt run the tests.
+.TP
+.B Copy the source tree to the machine.
+.TP
+.B Set $PYTHONPATH
+.TT
+Point the environment variable PYTHONPATH to the src/svnfiletereddump
+directory.
+.TP
+.B Set $PATH
+.TT
+Add the directory containing the \fBfiltereddump\fR command to the default search path ($PATH).
+.SH RUNNING THE TESTS
+If you do anything funny run the automatic tests. To do this easily you need
+the nose package. One way to get nose is using \fBpip\fR (http://pypi.python.org/pypi/pip). To run the tests just say \fBnosetests\fR in the folder
+containing the various test folders.
+.SH WARNINGS AND LIMITATIONS
+.B locale en_US.utf8 must be installed.
+The tool parses the output of various SVN commands. Correct operation
+may depend on both the language of the SVN command errors and warnings
+AND the character encoding used. To control this problems the LANG
+environment variable is set \'en_US.utf8\' by the script. If this
+locale is not installed (check \fBlocale -a\fR) the tool may fail or
+produce corrupted output. The later may happen especially with paths
+containing non-7bit-ASCII characters.
+.PP
+.B Designed for Pthyon 2.6+.
+The Tool was developed with Python 2.6 in mind. It hopefully works with much
+newer versions, but certainly not with older ones.
+.PP
+.B Tested with Subversion 1.6.17 and 1.7.0.
+The tool was tested with the version of Subversion, which were modern when
+it was written. It should work with no or minimal changes with most
+version of Subversion, where command \fBsvnadmin dump\fR produces dump
+format 2 (check the first lines of the dump output). However it is
+very sensitive to the errors and warnings produced by Subversion commands.
+The respective checks may need some tweaking for some versions of
+Subversion. In doubt look at the code in src/svnfilteredump/SvnRepository.py.
+.SH PERFORMANCE CONSIDERATIONS
+This tool is optimized to extract small portions from large repositories
+where only few revisions in the source repository are relevant for the
+target repository. It calls \fBsvnadmin dump\fR only for the revisions
+which are actually relevant for the output. So it may be much faster
+than e.g. svndumpfilter2 if only few revisions need to be dumped. On the
+other hand it may be slower than svndumpfilter2 if almost all revisions
+must be dumped - especially if the revisions contain mostly little data.
+.PP
+The time complexity is expected to grow linear in the
+size of the revisions it has to scan and logarithmic in depth of the
+directory trees, which are configured to be included/excluded.
+.PP
+Revision data is streamed over constant size buffers - typically just 1MB.
+So memory consumption should be very moderate. Growth after initial startup
+is only expected if the --drop-old-tags-and-branches is used - about
+linear with the automatically excluded paths.
+.SH REPORTING BUGS
+The preferred way to describe a bug is to write a functional test
+like the ones coming with the tool. If you are unable to do this, you
+may have to describe your problem as a sequence of commands to setup a
+minimal example repository plus your failing filtereddump command.
+Please include the console output produced by your run. If the problem is not
+obvious you may have to describe what's bad about the resulting dump.
+.PP
+Add your operating system, Pthyon version, Subversion version to the above
+data and send it to harald.wilhelmi@tngtech.com.
+.SH HISTORY AND CREDITS
+In 2011 the author had to reorganize a huge repository for a customer.
+This mostly meant splitting it in smaller parts and getting rid of
+old junk (someone had check-in huge amounts of static web content,
+which had been migrated to a CMS later). The tool svndumpfilter2
+from Eric Kidd proved highly valuable. Actually all of the new
+repositories but the very last one were created with this tool.
+.PP
+The last of the new repositories was so weired that the author hit
+all the limitations of svndumpfilter2. So he had to
+learn Python to remove them one by one. The result was almost a
+complete rewrite svndumpfilter2. When he was done he asked his customer
+for permission to publish this script - together with his thanks
+to Eric Kidd. However the customer denied this permission.
+.PP
+The author was not willing to except this outcome. So teamed up with
+some people from  his own company TNG Technology Consulting GmbH to
+write a new tool from scratch. filtereddump started as an exercise
+in Python test driven development at TNG Technology Consulting in
+Munich, September 2011. The first release was finished by the author
+with some support of his colleagues in October of the same year.
+The initial release was create mostly the author's free time but
+sponsored by TNG Technology Consulting GmbH by allowing him to do
+some of the work during the regular training/education sessions at
+the company's site.
+.PP
+Of cause this tool is designed to outperform svndumpfilter2 in almost
+every respect. However the author would like to point out that this
+tool would properly never have existed, if Eric Kidd had decided not
+to publish his tool. It was valuable source of inspiration and
+information.
+.SH AUTHORS
+Written by Harald Wilhelmi with the support of Thomas Fenzl and Bernd Stolle.
+.SH COPYRIGHT
+Copyright \(co 2011 Harald Wilhelmi
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+.br
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.SH "SEE ALSO"
+svn(1), svnadmin(1), http://svn.tartarus.org/sgt/svn-tools/svndumpfilter2?view=markup
