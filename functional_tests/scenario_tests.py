@@ -201,10 +201,10 @@ class ScenarioTests(unittest.TestCase):
         env.filter_repo( [ '--start-rev', '2', '--drop-old-tags-and-branches', '/' ] )
 
         self.assertEquals(env.get_file_content_in_rev('trunk/bla', 1), 'zzz', 'File trunk/bla correct in rev 1')
-        self.check_log_of_file_in_rev('trunk/bla', 2, [ [ 1, 'svnfiltereddump boots trap revision' ] ])
+        self.check_log_of_file_in_rev('trunk/bla', 1, [ [ 1, 'svnfiltereddump boots trap revision' ] ])
         
-        self.assertFalse(env.is_existing_in_rev('branches/new', 2), 'Sorry - new but classified as old due to mixed revisions working copy (1)')
-        self.assertFalse(env.is_existing_in_rev('tags/NEW1', 2), 'Sorry - new but classified as old due to mixed revisions working copy (1)')
+        self.assertFalse(env.is_existing_in_rev('branches/new', 1), 'Sorry - new but classified as old due to mixed revisions working copy (1)')
+        self.assertFalse(env.is_existing_in_rev('tags/NEW1', 1), 'Sorry - new but classified as old due to mixed revisions working copy (1)')
 
 if __name__ == '__main__':
     unittest.main()
