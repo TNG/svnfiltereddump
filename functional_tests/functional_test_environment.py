@@ -61,7 +61,7 @@ class TestEnvironment:
         check_call( [ 'svnadmin', 'create',  self.target_repo_path ] )
         check_call( [ 'svn', 'co', self.source_repo_url, self.source_repo_working_copy ], stdout=self.dev_null )
 
-        os.putenv('LANG', 'en_US.utf8')
+        os.putenv('LC_MESSAGES', 'C')
 
     def destroy(self):
         shutil.rmtree(self.work_dir)

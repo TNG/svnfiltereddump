@@ -48,10 +48,8 @@ setup_early_logging()
 setup_final_logging(config)
 logging.info("Command line: " + join(argv, ' '))
 
-# Make sure that:
-# 1) We get english error messages
-# 2) We have no encoding issues in the output/input of SVN commands
-putenv('LANG', 'en_US.utf8')
+# Make sure that we get english error messages
+putenv('LC_MESSAGES', 'C')
 
 source_repository = SvnRepository(config.source_repository)
 

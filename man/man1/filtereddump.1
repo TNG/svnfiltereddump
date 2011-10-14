@@ -60,7 +60,7 @@ all tags and branches, which are based on a revision older than
 the given start revision. Please note that tagging and branching in
 Subversion is done by convention. So this feature is just a heuristics,
 which may fail in a number of ways. The directories excluded are reported
-on STDERR and should carefully checked.
+and should be checked carefully.
 .TP
 \fB--tag-or-branch-dir=NAME\fR
 Use this option with \fB--drop-old-tags-and-branches\fR. By default
@@ -158,11 +158,6 @@ Linux will work almost certainly. Other UNIX-like should work without or
 with minor adaption. Systems with backslashes in their path names or without
 IPC via pipes will never work.
 .TP
-.B Prerequisite: locale en_US.utf8 must be installed. 
-.TT
-See the Warnings and Limitations section if you need to know what this
-about.
-.TP
 .B Prerequisite: Python 2.6 or high must be installed.
 .TT
 In doubt run the tests.
@@ -182,20 +177,13 @@ directory.
 .TP
 .B Set $PATH
 .TT
-Add the directory containing the \fBfiltereddump\fR command to the default search path ($PATH).
+Add the directory containing the \fBfiltereddump\fR command to the default search path.
 .SH RUNNING THE TESTS
-If you do anything funny run the automatic tests. To do this easily you need
-the nose package. One way to get nose is using \fBpip\fR (http://pypi.python.org/pypi/pip). To run the tests just say \fBnosetests\fR in the folder
-containing the various test folders.
+If you do anything funny run the automatic tests. To do this easily you need the
+nose package. One way to get nose is using \fBpip\fR (http://pypi.python.org/pypi/pip).
+To run the tests just say \fBnosetests\fR in the folder containing the various test
+folders.
 .SH WARNINGS AND LIMITATIONS
-.B locale en_US.utf8 must be installed.
-The tool parses the output of various SVN commands. Correct operation
-may depend on both the language of the SVN command errors and warnings
-AND the character encoding used. To control this problems the LANG
-environment variable is set \'en_US.utf8\' by the script. If this
-locale is not installed (check \fBlocale -a\fR) the tool may fail or
-produce corrupted output. The later may happen especially with paths
-containing non-7bit-ASCII characters.
 .PP
 .B Designed for Pthyon 2.6+.
 The Tool was developed with Python 2.6 in mind. It hopefully works with much
@@ -209,6 +197,9 @@ format 2 (check the first lines of the dump output). However it is
 very sensitive to the errors and warnings produced by Subversion commands.
 The respective checks may need some tweaking for some versions of
 Subversion. In doubt look at the code in src/svnfilteredump/SvnRepository.py.
+.B The option \fB--drop-old-tags-and-branches\fR uses just heuristics.
+Multiple ways are known to confuse the tool when using this option. It is
+absolutely essential to verify the list of automatically excluded directories.
 .SH PERFORMANCE CONSIDERATIONS
 This tool is optimized to extract small portions from large repositories
 where only few revisions in the source repository are relevant for the
