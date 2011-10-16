@@ -1,6 +1,7 @@
 
 import unittest
 from subprocess import call
+from time import sleep
 
 from functional_test_environment import TestEnvironment
 
@@ -151,12 +152,13 @@ class ScenarioTests(unittest.TestCase):
         env.commit('c1')
         # Revision 2
         env.copy_path('a/bla', 'a/blub')
+        sleep(1) # Work around a stange Subversion 1.7.0 timing issue.
         env.change_file('a/blub', 'yyy')
         env.commit('c2')
 
         env.filter_repo( [ 'a' ] )
 
-        self.assertEquals(env.get_file_content_in_rev('a/blub', 2), 'yyy', 'File a/blub correct in rev 2')
+        self.assertEquals(env.get_file_content_in_rev('a/blub', 2), 'yyy')
         self.check_log_of_file_in_rev('a/blub', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
 
     def test_add_and_change_into_target(self):
@@ -168,6 +170,7 @@ class ScenarioTests(unittest.TestCase):
         env.commit('c1')
         # Revision 2
         env.copy_path('a/bla', 'b/blub')
+        sleep(1) # Work around a stange Subversion 1.7.0 timing issue.
         env.change_file('b/blub', 'yyy')
         env.commit('c2')
 

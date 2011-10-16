@@ -1,22 +1,22 @@
-.TH FILTEREDDUMP "1" "October 2011" "svnfiltereddump tool 1.0" "User Commands"
+.TH SVNFILTEREDDUMP "1" "October 2011" "svnfiltereddump tool 1.0" "User Commands"
 .SH NAME
-filtereddump \- extracts parts from Subversion repositories
+svnfiltereddump \- extracts parts from Subversion repositories
 .SH SYNOPSIS
-.B filtereddump [\fIOPTIONS\fR] \fISOURCE-REPO\fR \fIPATH\fR ... \e
+.B svnfiltereddump [\fIOPTIONS\fR] \fISOURCE-REPO\fR \fIPATH\fR ... \e
 .br
   | svnadmin load ...
 .br
-.B filtereddump [\fIOPTIONS\fR] \fISOURCE-REPO\fR --include-file \fIFILE\fR ... \e
+.B svnfiltereddump [\fIOPTIONS\fR] \fISOURCE-REPO\fR --include-file \fIFILE\fR ... \e
 .br
   | svnadmin load ...
 .SH DESCRIPTION
 .PP
-The filtereddump tool is meant to extract portions of repositories of the
+The svnfiltereddump tool is meant to extract portions of repositories of the
 Subversion source control system. It's output can be loaded with Subversion's
 \fBsvnadmin load\fR command into a new Subversion repository. The source
 repository must be given on the command line. A list of paths to extract
-may given on command line or in one or more input file(s). It is possible
-to forget the revision history before a given start revision.
+may given on command line or in one or more input file(s). It is also possible
+to skip the revision history before a given starting revision.
 .SH OPTIONS
 .PP
 .TP
@@ -86,7 +86,7 @@ structure - and you want to isolate this two modules in their own repository
 .IP
 svnadmin create /repos/new
 .br
-filtereddump /repos/old module/a module/b \e
+svnfiltereddump /repos/old module/a module/b \e
 .br
   | svnadmin load --ignore-uuid /repos/new
 .PP
@@ -96,11 +96,11 @@ a list of tags/branches we are actually interested in:
 .IP
 last_rev=`svnlook youngest /repos/old`
 .br
-svnlook tree -r $last_rev --full-paths \e
+svnlook tree -r $last_rev --full-paths /repos/old \e
 .br
   | grep -E '^branches/[^/]+/module/[ab]/$' >list
 .br
-svnlook tree -r $last_rev --full-paths \e
+svnlook tree -r $last_rev --full-paths /repos/old \e
 .br
   | grep -E '^tags/[^/]+/module/[ab]$' >>list
 .br
@@ -108,11 +108,11 @@ echo trunk/module/a >>list
 .br
 echo trunk/module/b >>list
 .PP
-Now we can use this lists to get our target repository as above:
+Now we can use this list to get our target repository as above:
 .IP
 svnadmin create /repos/new
 .br
-filtereddump /repos/old --include-file list \e
+svnfiltereddump /repos/old --include-file list \e
 .br
   | svnadmin load --ignore-uuid /repos/new
 .PP
@@ -121,7 +121,7 @@ revision 120232. When we can do this:
 .IP
 svnadmin create /repos/new
 .br
-filtereddump /repos/old --start-rev 120232 --drop-old-tags-and-branches / \e
+svnfiltereddump /repos/old --start-rev 120232 --drop-old-tags-and-branches / \e
 .br
   | svnadmin load --ignore-uuid /repos/new
 .PP
@@ -139,13 +139,13 @@ this manually like this:
 .IP
 svnadmin create /repos/new
 .br
-filtereddump /repos/old_a common/prefix/somewhere/a \e
+svnfiltereddump /repos/old_a common/prefix/somewhere/a \e
 .br
   | svnadmin load --ignore-uuid /repos/new
 .br
 svn mkdir -m 'merging repos' file:///repos/new/common/prefix/elsewhere
 .br
-filtereddump --no-extra-mkdirs /repos/old_b common/prefix/elsewhere/b \e
+svnfiltereddump --no-extra-mkdirs /repos/old_b common/prefix/elsewhere/b \e
 .br
   | svnadmin load --ignore-uuid /repos/new
 .SH MANUAL INSTALLATION INSTRUCTIONS
@@ -166,23 +166,30 @@ In doubt run the tests.
 .TT
 The commands svn, svnadmin, and svnlook mustbe included in the default
 search path ($PATH). Version 1.6.x and 1.7.x are believed to work.
-Again in doubt run the tests.
+Again in doubt run the tests. Versions 1.6.17 and 1.7.0 were tested.
 .TP
 .B Copy the source tree to the machine.
 .TP
 .B Set $PYTHONPATH
 .TT
-Point the environment variable PYTHONPATH to the src/svnfiletereddump
-directory.
+Point the environment variable PYTHONPATH to the src directory.
 .TP
 .B Set $PATH
 .TT
-Add the directory containing the \fBfiltereddump\fR command to the default search path.
+Add the directory containing the \fBsvnfiltereddump\fR _ (src/bin) command to
+the default search path.
+.TP
+.B Install the man page
+.TT
+If you want to have this man page do a gzip on it and throw it into a suitable man
+directory (e.g. /usr/local/man/man1 or /usr/share/man/man1) or add the directory it
+lies in to your MANPATH
+environment variable.
 .SH RUNNING THE TESTS
 If you do anything funny run the automatic tests. To do this easily you need the
 nose package. One way to get nose is using \fBpip\fR (http://pypi.python.org/pypi/pip).
 To run the tests just say \fBnosetests\fR in the folder containing the various test
-folders.
+folders (tests, functional_tests, integration_tests).
 .SH WARNINGS AND LIMITATIONS
 .PP
 .B Designed for Pthyon 2.6+.
@@ -221,7 +228,7 @@ linear with the automatically excluded paths.
 The preferred way to describe a bug is to write a functional test
 like the ones coming with the tool. If you are unable to do this, you
 may have to describe your problem as a sequence of commands to setup a
-minimal example repository plus your failing filtereddump command.
+minimal example repository plus your failing svnfiltereddump command.
 Please include the console output produced by your run. If the problem is not
 obvious you may have to describe what's bad about the resulting dump.
 .PP
@@ -244,7 +251,7 @@ to Eric Kidd. However the customer denied this permission.
 .PP
 The author was not willing to except this outcome. So teamed up with
 some people from  his own company TNG Technology Consulting GmbH to
-write a new tool from scratch. filtereddump started as an exercise
+write a new tool from scratch. svnfiltereddump started as an exercise
 in Python test driven development at TNG Technology Consulting in
 Munich, September 2011. The first release was finished by the author
 with some support of his colleagues in October of the same year.
@@ -255,16 +262,18 @@ the company's site.
 .PP
 Of cause this tool is designed to outperform svndumpfilter2 in almost
 every respect. However the author would like to point out that this
-tool would properly never have existed, if Eric Kidd had decided not
+tool would probable never have existed, if Eric Kidd had decided not
 to publish his tool. It was valuable source of inspiration and
 information.
 .SH AUTHORS
-Written by Harald Wilhelmi with the support of Thomas Fenzl and Bernd Stolle.
-.SH COPYRIGHT
+Written by Harald Wilhelmi with the friendly support of Thomas Fenzl and Bernd Stolle.
+.SH COPYRIGHT AND LICENSE
 Copyright \(co 2011 Harald Wilhelmi
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 .br
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
+.SH "SOURCE"
+The definte address to get this tool is https://github.com/HaraldWilhelmi/svnfiltereddump.
 .SH "SEE ALSO"
 svn(1), svnadmin(1), http://svn.tartarus.org/sgt/svn-tools/svndumpfilter2?view=markup

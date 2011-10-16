@@ -62,10 +62,11 @@ class TestEnvironment:
         check_call( [ 'svn', 'co', self.source_repo_url, self.source_repo_working_copy ], stdout=self.dev_null )
 
         os.putenv('LC_MESSAGES', 'C')
+        lib_path = os.path.join(os.path.dirname(__file__), '../src')
+        os.putenv('PYTHONPATH', lib_path)
 
     def destroy(self):
         shutil.rmtree(self.work_dir)
-        self = None
 
     def mkdir(self, name):
         with TempChDir(self.source_repo_working_copy):
@@ -111,7 +112,7 @@ class TestEnvironment:
 
     def filter_repo(self, parameters):
         with TempChDir(self.source_repo_working_copy):
-            cmd_path = os.path.join(os.path.dirname(__file__), '../src/filtereddump')
+            cmd_path = os.path.join(os.path.dirname(__file__), '../src/bin/svnfiltereddump')
             process = Popen(
                 cmd_path + ' ' + self.source_repo_path + ' ' + join(parameters, ' ')
                 + ' | tee -a /tmp/dumps | svnadmin load --ignore-uuid ' + self.target_repo_path
