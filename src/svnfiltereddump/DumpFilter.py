@@ -38,7 +38,7 @@ class DumpFilter(object):
                 dump_format_version = lump.get_header('SVN-fs-dump-format-version')
                 if dump_format_version != '2':
                     raise UnsupportedDumpVersionException(
-                        'SVN-fs-dump-format-version was %s (wanted: 2)'
+                        'Detected unsupported SVN version - SVN-fs-dump-format-version was %s (wanted: 2)'
                         % ( dump_format_version )
                     )
             lump = self.dump_reader.read_lump()
