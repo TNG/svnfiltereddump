@@ -17,6 +17,8 @@ class InterestingPathMock(object):
     def is_interesting(self, path):
         return search('interesting', path) is not None
     def get_interesting_sub_directories(self, path):
+        if path[-1:] == '/':
+            path = path[:-1]
         if search('interesting', path) is not None:
             return [ path ]
         if search('iparent', path):
@@ -54,6 +56,24 @@ class TestDumpController(TestCase):
     def test_simple_interesting(self):
         self.repo.answers = {
             1: { 'A': [ 'a/interesting' ] }
+        }
+
+        self.controller.run()
+        self.assertEqual(self.process_log, [ '-1/'+STRATEGY_DUMP_HEADER, '1/'+STRATEGY_DUMP_SCAN ])
+        self.assertEqual(self.aux_data_by_rev, { })
+
+    def test_simple_interesting_dir(self):
+        self.repo.answers = {
+            1: { 'A': [ 'a/interesting/' ] }
+        }
+
+        self.controller.run()
+        self.assertEqual(self.process_log, [ '-1/'+STRATEGY_DUMP_HEADER, '1/'+STRATEGY_DUMP_SCAN ])
+        self.assertEqual(self.aux_data_by_rev, { })
+
+    def test_add_above_interesting_dir(self):
+        self.repo.answers = {
+            1: { 'A': [ 'a/iparent/' ] }
         }
 
         self.controller.run()

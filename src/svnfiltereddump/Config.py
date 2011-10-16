@@ -30,15 +30,15 @@ def _parse_command_line(command_line):
     )
     parser.add_option(
         '--no-extra-mkdirs', action='store_false', dest='create_parent_dirs', default=True,
-        help="By default extra nodes are injected to create the paraent directories of all paths in the include list. Use this option to swtich it off."
+        help="By default extra nodes are injected to create the parent directories of all paths in the include list. Use this option to switch it off."
     )
     parser.add_option(
         '--drop-old-tags-and-branches', action='store_true', dest='drop_old_tags_and_branches', default=False,
-        help="Use with the --start-rev option. Automatically exclude data in tags and branches directories refering to data before and up to the start revision."
+        help="Use with the --start-rev option. Automatically exclude data in tags and branches directories referring to data before and up to the start revision."
     )
     parser.add_option(
         '--tag-or-branch-dir', action='append', dest='custom_tags_and_branches_dirs', default=[],
-        help='Use with --drop-old-tags-and-branches. Overwrites the list of directory names, which contain tags and branches in your repository. Add one --tag-or-branch-dir option for each name you want - including \'tags\' and \'branches\' if you want to extend the orignal list.',
+        help='Use with --drop-old-tags-and-branches. Overwrites the list of directory names, which contain tags and branches in your repository. Add one --tag-or-branch-dir option for each name you want - including \'tags\' and \'branches\' if you want to extend the original list.',
         metavar='NAME'
     )
     parser.add_option(

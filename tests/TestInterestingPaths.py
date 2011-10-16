@@ -50,3 +50,11 @@ class InterestingPathsTests(TestCase):
         self.assertEqual(dirs, [ 'a/b/ca', 'a/b/cb' ])
 
         self.assertEqual([], interesting_path.get_interesting_sub_directories("a/b/c/x"))
+
+    def test_paths_with_trailing_slashes(self):
+        interesting_path = InterestingPaths()
+        interesting_path.mark_path_as_interesting('a/b/')
+
+        self.assertTrue(interesting_path.is_interesting('a/b'))
+        self.assertTrue(interesting_path.is_interesting('a/b/'))
+        

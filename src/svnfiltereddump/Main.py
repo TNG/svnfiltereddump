@@ -26,14 +26,15 @@ from ParentDirectoryLumpGenerator import ParentDirectoryLumpGenerator
 
 console_handler = None
 
-def _get_config_from_parameters():
-    config = Config(argv[1:])
+def _setup_interesting_paths(config):
     interesting_paths = InterestingPaths()
     for path in config.include_paths:
+        logging.info('Including path ' + path)
         interesting_paths.mark_path_as_interesting(path)
     for path in config.exclude_paths:
+        logging.info('EXCLUDING path ' + path)
         interesting_paths.mark_path_as_boring(path)
-    return ( config, interesting_paths )
+    return interesting_paths
 
 def _setup_early_logging():
     logger = logging.getLogger()
@@ -61,9 +62,10 @@ def _setup_final_logging(config):
 
 def run():
     _setup_early_logging()
-    ( config, interesting_paths ) = _get_config_from_parameters()
+    config = Config(argv[1:])
     _setup_final_logging(config)
     logging.info("Command line: " + join(argv, ' '))
+    interesting_paths = _setup_interesting_paths(config)
 
     # Make sure that we get english error messages
     putenv('LC_MESSAGES', 'C')

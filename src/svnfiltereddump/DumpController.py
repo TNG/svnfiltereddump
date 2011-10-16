@@ -30,6 +30,9 @@ class DumpController(object):
             for path in changes_by_type[change_type]:
                 if self.interesting_paths.is_interesting(path):
                     return ( STRATEGY_DUMP_SCAN, None )
+                if change_type == 'A':
+                    if self.interesting_paths.get_interesting_sub_directories(path):
+                        return ( STRATEGY_DUMP_SCAN, None )
 
         if not changes_by_type.has_key('D'):
             return ( STRATEGY_IGNORE, None )
