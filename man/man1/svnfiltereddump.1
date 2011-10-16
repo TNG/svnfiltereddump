@@ -204,9 +204,17 @@ format 2 (check the first lines of the dump output). However it is
 very sensitive to the errors and warnings produced by Subversion commands.
 The respective checks may need some tweaking for some versions of
 Subversion. In doubt look at the code in src/svnfilteredump/SvnRepository.py.
+.PP
 .B The option \fB--drop-old-tags-and-branches\fR uses just heuristics.
 Multiple ways are known to confuse the tool when using this option. It is
 absolutely essential to verify the list of automatically excluded directories.
+.PP
+.B There is no --renumber-revs option.
+Early versions of this tool had a option \fB--renumber-revs\fR like \fBsvndumpfilter\fR
+and \fBsvndumpfilter2\fR. The functional tests however showed that it is not of much
+use. Regardless how the \fBsvnfiltereddump\fR renumbered the revisions - \fBsvnadmin load\fR
+always assigned the revision numbers the same way. So this option was removed
+as useless.
 .SH PERFORMANCE CONSIDERATIONS
 This tool is optimized to extract small portions from large repositories
 where only few revisions in the source repository are relevant for the
@@ -225,6 +233,16 @@ So memory consumption should be very moderate. Growth after initial startup
 is only expected if the --drop-old-tags-and-branches is used - about
 linear with the automatically excluded paths.
 .SH REPORTING BUGS
+Normally you will have to do the first analysis of any problem yourself
+(unless you are willing 1) to give other people shell access to your
+Subversion server over the Internet 2) to pay TNG Technology Consulting
+to do this work for you \fBand\fR 3) someone at TNG has the time to do the job).
+Sorry for that. Start with path and
+revision you find in the error messages. Use 'svn log' and 'svn ls' to
+explore your source repository. Possibly use 'svnadmin dump --incremental'
+on the offending revision. Hopefully this will sufficient to track down
+the issue.
+.PP
 The preferred way to describe a bug is to write a functional test
 like the ones coming with the tool. If you are unable to do this, you
 may have to describe your problem as a sequence of commands to setup a
