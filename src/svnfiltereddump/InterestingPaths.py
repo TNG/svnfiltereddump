@@ -34,12 +34,12 @@ class InterestingPaths(object):
         self.root_node = _PathNode(None)
 
     def mark_path_as_interesting(self, path):
-        self.mark_path_as_type(path, INTERESTING)
+        self._mark_path_as_type(path, INTERESTING)
 
     def mark_path_as_boring(self, path):
-        self.mark_path_as_type(path, BORING)
+        self._mark_path_as_type(path, BORING)
 
-    def mark_path_as_type(self, path, node_type):
+    def _mark_path_as_type(self, path, node_type):
         path_elements = split_path(path)
         current_node = self.root_node
         for element in path_elements:
@@ -52,10 +52,10 @@ class InterestingPaths(object):
         current_node.node_type = node_type
 
     def is_interesting(self, path):
-        ( node, node_type ) = self.get_node_and_type_of_path(path)
+        ( node, node_type ) = self._get_node_and_type_of_path(path)
         return node_type == INTERESTING
 
-    def get_node_and_type_of_path(self, path):
+    def _get_node_and_type_of_path(self, path):
         path_elements = split_path(path)
         current_node = self.root_node
         current_type = current_node.node_type
@@ -70,18 +70,18 @@ class InterestingPaths(object):
         return ( current_node, current_type )
 
     def get_interesting_sub_directories(self, path):
-        ( node, node_type ) = self.get_node_and_type_of_path(path)
+        ( node, node_type ) = self._get_node_and_type_of_path(path)
         if node_type == INTERESTING:
             return [ path ]
         if node is None:
             return [ ]
-        return self.get_interesting_sub_directories_for_node(node)
+        return self._get_interesting_sub_directories_for_node(node)
 
-    def get_interesting_sub_directories_for_node(self, node):
+    def _get_interesting_sub_directories_for_node(self, node):
         if node.node_type == INTERESTING:
             return [ node.path ]
         dirs_found = [ ]
         for key in node.children.keys():
             child = node.children[key]
-            dirs_found += self.get_interesting_sub_directories_for_node(child)
+            dirs_found += self._get_interesting_sub_directories_for_node(child)
         return dirs_found
