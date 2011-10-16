@@ -4,10 +4,10 @@ from unittest import TestCase
 from LumpBuilderMock import LumpBuilderMock
 from RepositoryMock import RepositoryMock
 
-from svnfiltereddump import Config, InterestingPaths, DumpFilter, ContentTin
+from svnfiltereddump import Config, InterestingPaths, DumpFilter, ContentTin, UnsupportedDumpVersionException
 
 
-DUMP_CHANGE_FILE_A_B = """SVN-fs-dump-format-version: 3
+DUMP_CHANGE_FILE_A_B = """SVN-fs-dump-format-version: 2
 
 UUID: 9fda7f02-01c1-44b6-ae56-f8733c7e9818
 
@@ -43,7 +43,7 @@ y
 
 """
 
-DUMP_COPY_FILE_X_Y_TO_A_B = """SVN-fs-dump-format-version: 3
+DUMP_COPY_FILE_X_Y_TO_A_B = """SVN-fs-dump-format-version: 2
 
 UUID: 9fda7f02-01c1-44b6-ae56-f8733c7e9818
 
@@ -76,7 +76,7 @@ Text-copy-source-sha1: 24d212ee2d9b2655ab5e803dd8eac4b34f703f24
 
 """
 
-DUMP_COPY_FILE_X_Y_TO_A_B_WITH_CHANGE = """SVN-fs-dump-format-version: 3
+DUMP_COPY_FILE_X_Y_TO_A_B_WITH_CHANGE = """SVN-fs-dump-format-version: 2
 
 UUID: 9fda7f02-01c1-44b6-ae56-f8733c7e9818
 
@@ -126,7 +126,7 @@ y
 
 """
 
-DUMP_COPY_DIR_X_Y_TO_A_B = """SVN-fs-dump-format-version: 3
+DUMP_COPY_DIR_X_Y_TO_A_B = """SVN-fs-dump-format-version: 2
 
 UUID: 9fda7f02-01c1-44b6-ae56-f8733c7e9818
 
@@ -158,7 +158,7 @@ Node-copyfrom-path: x/y
 """
 
 
-DUMP_DELETE_FILE_A_B = """SVN-fs-dump-format-version: 3
+DUMP_DELETE_FILE_A_B = """SVN-fs-dump-format-version: 2
 
 UUID: 9fda7f02-01c1-44b6-ae56-f8733c7e9818
 
@@ -186,6 +186,33 @@ Node-action: delete
 
 """
 
+DUMP_UNSUPPORTED_VERSION = """SVN-fs-dump-format-version: 3
+
+UUID: 9fda7f02-01c1-44b6-ae56-f8733c7e9818
+
+Revision-number: 3
+Prop-content-length: 105
+Content-length: 105
+
+K 7
+svn:log
+V 3
+Bl
+
+K 10
+svn:author
+V 8
+wilhelmh
+K 8
+svn:date
+V 27
+2011-09-04T10:27:15.088237Z
+PROPS-END
+
+Node-path: a/b
+Node-action: delete
+
+"""
 
 
 class TestDumpFilter(TestCase):
@@ -353,6 +380,13 @@ class TestDumpFilter(TestCase):
         self.assertEqual(self.builder.call_history[1], 
             [ 'delete_path', 'a/b/c' ]
         )
+
+    def test_unsupported_dump_version(self):
+        self.interesting_paths.mark_path_as_interesting('a/b/c')
+        self.repo.dumps_by_revision[3] = DUMP_UNSUPPORTED_VERSION
+        self.repo.files_by_name_and_revision['a/b/c'] = { 2: "xxx\n\yyy\n" }
+
+        self.assertRaises(UnsupportedDumpVersionException, self.dump_filter.process_revision, 3, None)
 
     def test_delete_over_non_existing(self):
         self.interesting_paths.mark_path_as_interesting('a/b/c')

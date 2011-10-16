@@ -10,7 +10,7 @@ from DumpController import DumpController, STRATEGY_DUMP_HEADER, STRATEGY_IGNORE
 # Generate the lumps for that
 from DumpHeaderGenerator import DumpHeaderGenerator
 from BootsTrapper import BootsTrapper
-from DumpFilter import DumpFilter
+from DumpFilter import DumpFilter, UnsupportedDumpVersionException
 from SyntheticDeleter import SyntheticDeleter
 from RevisionIgnorer import RevisionIgnorer
 

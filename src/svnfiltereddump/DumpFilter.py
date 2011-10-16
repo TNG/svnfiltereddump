@@ -2,6 +2,12 @@
 from SvnDumpReader import SvnDumpReader
 from LumpBuilder import LumpBuilder
 
+class UnsupportedDumpVersionException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 class DumpFilter(object):
     def __init__(self, config, source_repository, interesting_paths, lump_builder):
         self.config = config
@@ -28,6 +34,13 @@ class DumpFilter(object):
     def _process_header_lumps(self):
         lump = self.dump_reader.read_lump()
         while lump and not lump.has_header('Revision-number'):
+            if lump.has_header('SVN-fs-dump-format-version'):
+                dump_format_version = lump.get_header('SVN-fs-dump-format-version')
+                if dump_format_version != '2':
+                    raise UnsupportedDumpVersionException(
+                        'SVN-fs-dump-format-version was %s (wanted: 2)'
+                        % ( dump_format_version )
+                    )
             lump = self.dump_reader.read_lump()
         if not lump:
             raise Exception("Failed to parse dump of revision %d: No revision header found!")
