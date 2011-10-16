@@ -61,6 +61,15 @@ class LumpBuilder(object):
         info('Excluding obsolete tag/branch: ' + path)
         self.interesting_paths.mark_path_as_boring(path)
 
+    def add_path_from_target(self, path, kind, from_path, from_rev):
+        lump = SvnLump()
+        lump.set_header('Node-path', path)
+        lump.set_header('Node-kind', kind)
+        lump.set_header('Node-action', 'add')
+        lump.set_header('Node-copyfrom-path', from_path)
+        lump.set_header('Node-copyfrom-rev', str(from_rev))
+        self.dump_writer.write_lump(lump)
+
     def change_lump_from_add_lump(self, sample_lump):
         lump = copy(sample_lump)
         lump.set_header('Node-action', 'change')

@@ -66,6 +66,86 @@ class ScenarioTests(unittest.TestCase):
         self.assertEquals(env.get_property_in_rev('b/blub', 2, 'some_prop'), 'prop_value', 'File b/blub property correct in rev 2')
         self.check_log_of_file_in_rev('b/blub', 2, [ [ 2, 'c2' ] ])
         
+    def test_add_dir_above_file_inside_target(self):
+        env = self.env
+        # Revision 1
+        env.mkdir('a')
+        env.mkdir('a/b')
+        env.add_file('a/b/bla', 'xxx')
+        env.propset('a/b/bla', 'some_prop', 'prop_value')
+        env.commit('c1')
+        # Revision 2
+        env.copy_path('a', 'c')
+        env.commit('c2')
+
+        env.filter_repo( [ 'a', 'c/b' ] )
+
+        self.assertTrue(env.is_existing_in_rev('a/b/bla', 1), 'File a/b/bla existent in rev 1')
+        self.assertFalse(env.is_existing_in_rev('c/b/bla', 1), 'File c/b/bla not existent in rev 1')
+        self.assertEquals(env.get_file_content_in_rev('c/b/bla', 2), 'xxx', 'File bla correct in rev 2')
+        self.assertEquals(env.get_property_in_rev('c/b/bla', 2, 'some_prop'), 'prop_value', 'File bla property correct in rev 2')
+        self.check_log_of_file_in_rev('c/b/bla', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
+
+    def test_add_dir_above_dir_inside_target(self):
+        env = self.env
+        # Revision 1
+        env.mkdir('a')
+        env.mkdir('a/b')
+        env.mkdir('a/b/x')
+        env.add_file('a/b/x/bla', 'xxx')
+        env.propset('a/b/x', 'some_prop', 'prop_value')
+        env.commit('c1')
+        # Revision 2
+        env.copy_path('a', 'c')
+        env.commit('c2')
+
+        env.filter_repo( [ 'a', 'c/b' ] )
+
+        self.assertTrue(env.is_existing_in_rev('a/b/x/bla', 1), 'File a/b/x/bla existent in rev 1')
+        self.assertFalse(env.is_existing_in_rev('c/b/x/bla', 1), 'File c/b/x/bla not existent in rev 1')
+        self.assertEquals(env.get_file_content_in_rev('c/b/x/bla', 2), 'xxx', 'File bla correct in rev 2')
+        self.assertEquals(env.get_property_in_rev('c/b/x', 2, 'some_prop'), 'prop_value', 'Dir x property correct in rev 2')
+        self.check_log_of_file_in_rev('c/b/x/bla', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
+
+    def test_add_dir_above_file_into_target(self):
+        env = self.env
+        # Revision 1 - extra mkdirs only
+        env.mkdir('a')
+        env.mkdir('a/b')
+        env.add_file('a/b/bla', 'xxx')
+        env.propset('a/b/bla', 'some_prop', 'prop_value')
+        env.commit('c1')
+        # Revision 2
+        env.copy_path('a', 'c')
+        env.commit('c2')
+
+        env.filter_repo( [ 'c/b' ] )
+
+        self.assertFalse(env.is_existing_in_rev('a', 1), 'Dir a not existent in rev 1')
+        self.assertEquals(env.get_file_content_in_rev('c/b/bla', 2), 'xxx', 'File bla correct in rev 2')
+        self.assertEquals(env.get_property_in_rev('c/b/bla', 2, 'some_prop'), 'prop_value', 'File bla property correct in rev 2')
+        self.check_log_of_file_in_rev('c/b/bla', 2, [ [ 2, 'c2' ] ])
+
+    def test_add_dir_above_dir_into_target(self):
+        env = self.env
+        # Revision 1 - extra mkdirs only
+        env.mkdir('a')
+        env.mkdir('a/b')
+        env.mkdir('a/b/x')
+        env.add_file('a/b/x/bla', 'xxx')
+        env.propset('a/b/x', 'some_prop', 'prop_value')
+        env.commit('c1')
+        # Revision 1
+        env.copy_path('a', 'c')
+        env.commit('c2')
+
+        env.filter_repo( [ 'c/b' ] )
+
+        self.assertFalse(env.is_existing_in_rev('a', 2), 'Dir a not existent in rev 2')
+        self.assertEquals(env.get_file_content_in_rev('c/b/x/bla', 2), 'xxx', 'File bla correct in rev 2')
+        self.assertEquals(env.get_property_in_rev('c/b/x', 2, 'some_prop'), 'prop_value', 'Dir x property correct in rev 2')
+        self.check_log_of_file_in_rev('c/b/x/bla', 2, [ [ 2, 'c2' ] ])
+
     def test_add_into_excluded(self):
         env = self.env
         # Revision 1

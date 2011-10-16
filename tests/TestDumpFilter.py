@@ -348,6 +348,22 @@ class TestDumpFilter(TestCase):
             [ 'add_tree_from_source', 'a/b', 'x/y', 2 ]
         )
         
+    def test_copy_to_path_above(self):
+        self.interesting_paths.mark_path_as_interesting('a/b/c1')
+        self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_Y_TO_A_B 
+        self.repo.tree_by_path_and_revision['x/y'] = { 2: [ 'x/y/', 'x/y/c1', 'x/y/c2' ] }
+        self.repo.files_by_name_and_revision['x/y/c1'] = { 2: "xxx\n\yy1\n" }
+        self.repo.files_by_name_and_revision['x/y/c2'] = { 2: "xxx\n\yy2\n" }
+        self.repo.properties_by_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
+        self.repo.properties_by_path_and_revision['x/y/c1'] = { 2: { 'prop2': 'value2' } }
+        self.repo.properties_by_path_and_revision['x/y/c2'] = { 2: { } }
+
+        self.dump_filter.process_revision(3, None)
+        self._verfiy_revision_header()
+        self.assertEqual(self.builder.call_history[1],
+            ['add_path_from_source_repository', 'file', 'a/b/c1', 'x/y/c1', 2]
+        )
+
     def test_delete_inside(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_DELETE_FILE_A_B

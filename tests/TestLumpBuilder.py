@@ -74,6 +74,23 @@ class TestLumpBuilder(TestCase):
         self.assertEqual(lump.properties, { 'a2': 'y1', 'b2': 'y2' } )
         self.writer.check_content_tin_of_lump_nr(0, None)
 
+    def test_add_path_from_target(self):
+        self.builder.add_path_from_target('new/path', 'file', 'source/path', 17)
+
+        self.assertEqual(len(self.writer.lumps), 1)
+        lump = self.writer.lumps[0]
+        self.assertEqual(
+            lump.get_header_keys(),
+            [ 'Node-path', 'Node-kind', 'Node-action', 'Node-copyfrom-path', 'Node-copyfrom-rev' ]
+        )
+        self.assertEqual(lump.get_header('Node-path'), 'new/path')
+        self.assertEqual(lump.get_header('Node-kind'), 'file')
+        self.assertEqual(lump.get_header('Node-action'), 'add')
+        self.assertEqual(lump.get_header('Node-copyfrom-path'), 'source/path')
+        self.assertEqual(lump.get_header('Node-copyfrom-rev'), '17')
+        self.assertEqual(lump.properties, { } )
+        self.writer.check_content_tin_of_lump_nr(0, None)
+
     def test_clone_change_lump_from_add_lump(self):
         sample_lump = SvnLump()
         sample_lump.set_header('Node-path', 'a/b/c')

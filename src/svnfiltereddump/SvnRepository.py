@@ -3,6 +3,7 @@ from os import waitpid
 from string import join
 from subprocess import Popen, check_call, PIPE, STDOUT
 from hashlib import md5
+from logging import info
 import re
 
 from ContentTin import ContentTin
@@ -107,7 +108,7 @@ class SvnRepository(object):
     def get_type_of_path(self, path, rev):
         if path[-1:] == '/':
             path = path[:-1]
-        args = [ 'svnlook', 'tree', '-r', str(rev), self.path, path ]
+        args = [ 'svnlook', 'tree', '--full-paths', '-r', str(rev), self.path, path ]
         process = Popen(args, stdout=PIPE, stderr=PIPE)
         output = process.stdout.read()
         error = process.stderr.read()
@@ -122,7 +123,6 @@ class SvnRepository(object):
                     "Command '%s' exited unexpected with status %d and error message:\n%s"
                     % ( join(args), status, error )
                 )
-
         if output.startswith(path + "/\n"):
             return 'dir'
         else:

@@ -1,4 +1,5 @@
 
+from logging import info
 from SvnDumpReader import SvnDumpReader
 from LumpBuilder import LumpBuilder
 
@@ -60,9 +61,21 @@ class DumpFilter(object):
 
     def _process_add_lump(self, lump):
         path = lump.get_header('Node-path')
-        if not self.interesting_paths.is_interesting(path):
+        if self.interesting_paths.is_interesting(path):
+            self._process_add_lump_of_interesting_path(lump)
             return
 
+        if lump.get_header('Node-kind') != 'dir':
+            return
+        if not lump.has_header('Node-copyfrom-path'):
+            return
+
+        from_path = lump.get_header('Node-copyfrom-path')
+        from_rev = int(lump.get_header('Node-copyfrom-rev'))
+        self._copy_interesting_sub_directories_of_path(path, from_path, from_rev)
+
+    def _process_add_lump_of_interesting_path(self, lump):
+        path = lump.get_header('Node-path')
         if not lump.has_header('Node-copyfrom-path'):
             self.lump_builder.pass_lump(lump)
             return
@@ -85,7 +98,29 @@ class DumpFilter(object):
                 self.lump_builder.add_tree_from_source(path, from_path, from_rev)
             if lump.content:
                 self.lump_builder.change_lump_from_add_lump(lump)
-                
+
+    def _copy_interesting_sub_directories_of_path(self, path, from_path, from_rev):
+        if path[-1:] == '/':
+            path = path[:-1]
+        start_rev = 0
+        if self.config.start_rev:
+            start_rev = self.config.start_rev
+
+        paths_to_check = self.interesting_paths.get_interesting_sub_directories(path)
+        for sub_path in paths_to_check:
+            from_sub_path = from_path + sub_path[len(path):]
+            node_kind = self.source_repository.get_type_of_path(from_sub_path, from_rev)
+            if not node_kind:
+                continue
+            is_internal_copy = self.interesting_paths.is_interesting(from_path) and from_rev >= start_rev
+            if is_internal_copy:
+                self.lump_builder.add_path_from_target(sub_path, node_kind, from_sub_path, from_rev)
+            else:
+                if node_kind == 'file':
+                    self.lump_builder.add_path_from_source_repository('file', sub_path, from_sub_path, from_rev)
+                else:
+                    self.lump_builder.add_tree_from_source(sub_path, from_sub_path, from_rev)
+
     def _process_delete_lump(self, lump):
         path = lump.get_header('Node-path')
         if self.interesting_paths.is_interesting(path):
