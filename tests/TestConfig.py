@@ -28,6 +28,7 @@ class ConfigTest(TestCase):
         self.assertFalse(config.is_path_tag_or_branch('trunk'))
         self.assertFalse(config.is_path_tag_or_branch('bla'))
         self.assertFalse(config.is_path_tag_or_branch('tags'))
+        self.assertFalse(config.is_path_tag_or_branch('tags/'))
         self.assertFalse(config.is_path_tag_or_branch('tagsX/something'))
         self.assertFalse(config.is_path_tag_or_branch('prefix/tags'))
         self.assertFalse(config.is_path_tag_or_branch('tags/something/bla'))

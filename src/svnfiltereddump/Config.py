@@ -112,6 +112,8 @@ class Config(object):
     def is_path_tag_or_branch(self, path):
         levels_below_tag_or_branch = None
         for element in path.split('/'):
+            if element == '':
+                continue
             if levels_below_tag_or_branch is not None:
                 levels_below_tag_or_branch += 1
                 if levels_below_tag_or_branch > 1:

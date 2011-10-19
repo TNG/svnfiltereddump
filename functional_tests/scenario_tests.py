@@ -17,10 +17,7 @@ class ScenarioTests(unittest.TestCase):
     def check_log_of_file_in_rev(self, name, rev, exected_log):
         ( parsed_log, error ) = self.env.get_log_of_file_in_rev(name, rev)
         if error is None:
-            self.assertEquals(
-                parsed_log, exected_log,
-                "Validate log of file file %s in revision %d" % ( name, rev )
-            )
+            self.assertEquals(parsed_log, exected_log)
         else:
             self.fail(
                 "Failed to get log of file %s in revision %d with error:\n%s"
@@ -289,5 +286,65 @@ class ScenarioTests(unittest.TestCase):
         self.assertFalse(env.is_existing_in_rev('branches/new', 1), 'Sorry - new but classified as old due to mixed revisions working copy (1)')
         self.assertFalse(env.is_existing_in_rev('tags/NEW1', 1), 'Sorry - new but classified as old due to mixed revisions working copy (1)')
 
+    def test_tag_copy_current(self):
+        env = self.env
+        # Revision dropped
+        env.mkdir('trunk')
+        env.mkdir('tags')
+        env.mkdir('branches')
+        env.mkdir('trunk/a')
+        env.mkdir('trunk/a/b')
+        env.add_file('trunk/a/b/bla', 'xxx')
+        env.commit('c1')
+        # Revision 1 --- start_rev ---
+        env.change_file('trunk/a/b/bla', 'yyy')
+        env.commit('c2')
+        # Revision 2
+        env.change_file('trunk/a/b/bla', 'zzz')
+        env.commit('c3')
+        # Revision 3
+        env.update()
+        env.copy_path('trunk', 'tags/NEW1');
+        env.commit('c4')
+        # Revision 4
+        env.change_file('trunk/a/b/bla', 'ZZZ')
+        env.commit('c5')
+
+        env.filter_repo( [ '--start-rev', '2', '--drop-old-tags-and-branches', 'trunk/a', 'tags/NEW1/a' ] )
+
+        self.assertEquals(env.get_file_content_in_rev('trunk/a/b/bla', 4), 'ZZZ')
+        self.check_log_of_file_in_rev('trunk/a/b/bla', 4, [ [ 4, 'c5' ], [2, 'c3' ], [ 1, 'svnfiltereddump boots trap revision' ] ])
+        self.check_log_of_file_in_rev('tags/NEW1/a/b/bla', 4, [ [ 3, 'c4' ], [2, 'c3' ], [ 1, 'svnfiltereddump boots trap revision' ] ])
+        
+    def test_tag_copy_obsolete(self):
+        env = self.env
+        # Revision dropped
+        env.mkdir('trunk')
+        env.mkdir('tags')
+        env.mkdir('branches')
+        env.mkdir('trunk/a')
+        env.mkdir('trunk/a/b')
+        env.add_file('trunk/a/b/bla', 'xxx')
+        env.commit('c1')
+        # Revision dropped
+        env.change_file('trunk/a/b/bla', 'yyy')
+        env.commit('c2')
+        # Revision dropped
+        env.update()
+        env.copy_path('trunk', 'tags/NEW1');
+        env.commit('c3')
+        # Revision 1 --- start_rev ---
+        env.change_file('trunk/a/b/bla', 'zzz')
+        env.commit('c4')
+        # Revision 2
+        env.change_file('trunk/a/b/bla', 'ZZZ')
+        env.commit('c5')
+
+        env.filter_repo( [ '--start-rev', '4', '--drop-old-tags-and-branches', 'trunk/a', 'tags' ] )
+
+        self.assertEquals(env.get_file_content_in_rev('trunk/a/b/bla', 2), 'ZZZ')
+        self.check_log_of_file_in_rev('trunk/a/b/bla', 2, [ [2, 'c5' ], [ 1, 'svnfiltereddump boots trap revision' ] ])
+        self.assertFalse(env.is_existing_in_rev('tags/NEW1', 2), 'Obsolete branch dropped')
+        
 if __name__ == '__main__':
     unittest.main()

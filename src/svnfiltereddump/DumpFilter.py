@@ -112,7 +112,7 @@ class DumpFilter(object):
             node_kind = self.source_repository.get_type_of_path(from_sub_path, from_rev)
             if not node_kind:
                 continue
-            is_internal_copy = self.interesting_paths.is_interesting(from_path) and from_rev >= start_rev
+            is_internal_copy = self.interesting_paths.is_interesting(from_sub_path) and from_rev >= start_rev
             if is_internal_copy:
                 self.lump_builder.add_path_from_target(sub_path, node_kind, from_sub_path, from_rev)
             else:
