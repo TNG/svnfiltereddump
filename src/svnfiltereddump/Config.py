@@ -2,8 +2,10 @@
 from optparse import OptionParser
 from string import join
 
+VERSION = '1.0 Beta'
+
 def _parse_command_line(command_line):
-    parser = OptionParser('usage: %prog [options] <absolute repository path> <include path> ...')
+    parser = OptionParser("usage: %prog [options] <absolute repository path> <include path> ...\n\nVersion " + VERSION)
     parser.add_option(
         '--include-file', action='append', dest='include_files', default=[],
         help='Read paths to include from given file.',
