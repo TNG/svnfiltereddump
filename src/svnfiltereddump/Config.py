@@ -108,19 +108,21 @@ class Config(object):
                 self.tag_and_branch_dict[name] = True
         else:
             self.tag_and_branch_dict = { 'tags': True, 'branches': True }
+        self.trunk_dict = { 'trunk':True }
 
     def is_path_tag_or_branch(self, path):
-        levels_below_tag_or_branch = None
+        is_just_below_tags_or_branches = False
+        is_tag_or_branch = False
         for element in path.split('/'):
             if element == '':
                 continue
-            if levels_below_tag_or_branch is not None:
-                levels_below_tag_or_branch += 1
-                if levels_below_tag_or_branch > 1:
-                    return False
-            if self.tag_and_branch_dict.has_key(element):
-                levels_below_tag_or_branch = 0
-        if levels_below_tag_or_branch:
-            return True
-        else:
-            return False
+            if self.trunk_dict.has_key(element):
+                return False
+            elif self.tag_and_branch_dict.has_key(element):
+                is_just_below_tags_or_branches = True
+            elif is_just_below_tags_or_branches:
+                is_just_below_tags_or_branches = False
+                is_tag_or_branch = True
+            elif is_tag_or_branch:
+                return False
+        return is_tag_or_branch

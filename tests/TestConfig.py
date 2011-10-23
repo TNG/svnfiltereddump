@@ -33,6 +33,8 @@ class ConfigTest(TestCase):
         self.assertFalse(config.is_path_tag_or_branch('prefix/tags'))
         self.assertFalse(config.is_path_tag_or_branch('tags/something/bla'))
         self.assertFalse(config.is_path_tag_or_branch('prefix/branches/something/bla'))
+        self.assertFalse(config.is_path_tag_or_branch('trunk/tags/x'))
+        self.assertFalse(config.is_path_tag_or_branch('a/trunk/bla/branches/x'))
 
     def test_include_file(self):
         ( fh ) = tempfile.NamedTemporaryFile(delete=False)
