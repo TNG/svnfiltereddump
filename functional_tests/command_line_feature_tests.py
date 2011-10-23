@@ -267,5 +267,43 @@ class ComandLineFeatureTests(unittest.TestCase):
         self.assertFalse(env.is_existing_in_rev('my_tags/OLD_TAG', 1), 'Old tag dropped')
         self.assertFalse(env.is_existing_in_rev('my_branches/OLD_BRANCH', 1), 'Old branch dropped')
 
+    def test_drop_old_tags_and_branches_with_custom_trunk(self):
+        env = self.env
+        # Revision dropped
+        env.mkdir('mytrunk')
+        env.mkdir('tags')
+        env.mkdir('branches')
+        env.add_file('mytrunk/bla', 'xxx')
+        env.commit('c1')
+        # Revision dropped
+        env.mkdir('mytrunk/tags')
+        env.mkdir('mytrunk/tags/no_tag')
+        env.add_file('mytrunk/tags/no_tag/blub', 'yyy')
+        env.mkdir('trunk')
+        env.mkdir('trunk/branches')
+        env.copy_path('mytrunk', 'branches/OLD_BRANCH'); # Valid old branch because 'trunk' is not magic in this time
+        env.commit('c2')
+        # Revision dropped
+        env.update()
+        env.copy_path('mytrunk', 'tags/OLD1'); # Valid old tag
+        env.commit('c3')
+        # Revision 1 --- start_rev ---
+        env.change_file('mytrunk/bla', 'zzz')
+        env.commit('c4')
+        # Revision 3
+        env.update()
+        env.copy_path('mytrunk', 'trunk/branches/NEW'); # Valid recent branch
+        env.commit('c5')
+
+        env.filter_repo( [ '--start-rev', '4', '--drop-old-tags-and-branches', '/', '--trunk-dir', 'mytrunk' ] )
+
+        self.assertEqual(env.get_file_content_in_rev('mytrunk/bla', 2), 'zzz')
+        self.assertEqual(env.get_file_content_in_rev('mytrunk/tags/no_tag/blub', 2), 'yyy')
+        self.assertEqual(env.get_file_content_in_rev('trunk/branches/NEW/bla', 2), 'zzz')
+        self.assertEqual(env.get_file_content_in_rev('trunk/branches/NEW/tags/no_tag/blub', 2), 'yyy')
+
+        self.assertFalse(env.is_existing_in_rev('branches/OLD_BRANCH', 1), 'Very old brach dropped')
+        self.assertFalse(env.is_existing_in_rev('tags/OLD1', 1), 'Old tag dropped')
+
 if __name__ == '__main__':
     unittest.main()

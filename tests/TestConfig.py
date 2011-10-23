@@ -104,6 +104,12 @@ class ConfigTest(TestCase):
         self.assertFalse(config.is_path_tag_or_branch('foo/trunk/bar'))
         self.assertFalse(config.is_path_tag_or_branch('foo/tags/bar'))
 
+    def test_custom_trunk(self):
+        config = Config( [ '/repo/path', 'a/b', '--trunk-dir', 'bla', '--tag-or-branch-dir', 'blub' ] )
+        self.assertFalse(config.is_path_tag_or_branch('bla/branches/bar'))
+        self.assertFalse(config.is_path_tag_or_branch('blub/branches/bar'))
+        self.assertFalse(config.is_path_tag_or_branch('trunk/branches/bar'))
+
     # We need: 'assertExits' here!!
     # def test_bad_source_repo_path(self):
     #    self.assertRaises(Exception, Config, [ 'repo/path', 'a/b' ])

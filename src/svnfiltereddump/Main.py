@@ -30,10 +30,10 @@ console_handler = None
 def _setup_interesting_paths(config):
     interesting_paths = InterestingPaths()
     for path in config.include_paths:
-        logging.info('Including path ' + path)
+        logging.info("Including path '%s'" % (path) )
         interesting_paths.mark_path_as_interesting(path)
     for path in config.exclude_paths:
-        logging.info('EXCLUDING path ' + path)
+        logging.info("EXCLUDING path '%s'" % (path) )
         interesting_paths.mark_path_as_boring(path)
     return interesting_paths
 

@@ -70,6 +70,14 @@ of this options. If at least one \fB--tag-or-branch-dir\fR option is
 given you always start with an empty list. E.g if you just run with
 \'--tag-or-branch-dir=branches\' directories called \'tags\' are no longer
 considered by the \fB--drop-old-tags-and-branches\fR option.
+\fB--trunk-dir=NAME\fR
+Use this option with \fB--drop-old-tags-and-branches\fR. By default
+it will be assumed that directories called trunk have no tags or
+branches below them - even if by chance some directory below them is
+called 'tags' or 'branches'. If you diverted from the convention
+and called your trunk directories differently you can supply your
+name(s) with \fB--trunk-dir=NAME\fR. It work similar to the
+\fB--tag-or-branch-dir=NAME\fR option.
 .TP
 \fB-q\fR, \fB--quiet\fR
 Only report errors and warnings on console.

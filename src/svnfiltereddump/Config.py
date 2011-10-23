@@ -42,6 +42,11 @@ def _parse_command_line(command_line):
         metavar='NAME'
     )
     parser.add_option(
+        '--trunk-dir', action='append', dest='custom_trunk_dirs', default=[],
+        help='Use with --drop-old-tags-and-branches. Overwrites the list of directory names, which contain the trunk(s) your repository. Add one --tuunk-dir option for each name you want - including \'trunk\' if you want to extend the original list.',
+        metavar='NAME'
+    )
+    parser.add_option(
         '-q', '--quiet', action='store_true', dest='quiet', default=False,
         help="Only log errors and warnings on console."
     )
@@ -102,13 +107,19 @@ class Config(object):
 
         self.drop_old_tags_and_branches = options.drop_old_tags_and_branches
 
-        self.tag_and_branch_dict = { }
         if options.custom_tags_and_branches_dirs:
+            self.tag_and_branch_dict = { }
             for name in options.custom_tags_and_branches_dirs:
                 self.tag_and_branch_dict[name] = True
         else:
             self.tag_and_branch_dict = { 'tags': True, 'branches': True }
-        self.trunk_dict = { 'trunk':True }
+        self.trunk_dict = { }
+        if options.custom_trunk_dirs:
+            self.trunk_dict = { }
+            for name in options.custom_trunk_dirs:
+                self.trunk_dict[name] = True
+        else:
+            self.trunk_dict = { 'trunk':True }
 
     def is_path_tag_or_branch(self, path):
         is_just_below_tags_or_branches = False
