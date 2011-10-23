@@ -1,13 +1,12 @@
 
-Please look at the filtereddump man page.
-If it is not installed on your system, display
-it by typing
+Please look at the svnfiltereddump man page.
+If it is not installed on your system, you can display it by typing
 
-    man man/man1/filtereddump.1
+    man man/man1/svnfiltereddump.1
 
 or
 
-    nroff -man man/man1/filtereddump.1 | less
+    nroff -man man/man1/svnfiltereddump.1 | less
 
-in directory containing this README. In contains
-also basic installation instructions.
+in directory containing this README. In contains also basic installation
+instructions.
