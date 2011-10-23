@@ -85,7 +85,6 @@ Only report errors and warnings on console.
 \fB-l FILE\fR, \fB--log-file=FILE\fR
 Write messages to given log file.
 .SH EXAMPLES
-.PP
 The most common use case is to extract some trees from an existing
 repository. Assume you have a repository at /repos/old. It contains
 two modules module/a and module/b - both with there own trunk/tags/branches
@@ -180,11 +179,11 @@ Again in doubt run the tests. Versions 1.6.17 and 1.7.0 were tested.
 .TP
 .B Set $PYTHONPATH
 .TT
-Point the environment variable PYTHONPATH to the src directory.
+Point the environment variable PYTHONPATH to the \fBsrc\fR directory.
 .TP
 .B Set $PATH
 .TT
-Add the directory containing the \fBsvnfiltereddump\fR _ (src/bin) command to
+Add the directory containing the \fBsvnfiltereddump\fR command (\fBsrc/bin\fR) to
 the default search path.
 .TP
 .B Install the man page
@@ -200,9 +199,9 @@ To run the tests just say \fBnosetests\fR in the folder containing the various t
 folders (tests, functional_tests, integration_tests). You may pass folder or test case
 names to \fBnosetests\fR to run just some of the tests.
 .PP
-The tests folder contains classic unit tests which run very fast. The tests in the
-integration_tests folder focus of the interaction of the tool with your Subversion
-installation and the operating system. The tests in the functional_tests folder
+The \fBtests\fR folder contains classic unit tests which run very fast. The tests in the
+\fBintegration_tests\fR folder focus of the interaction of the tool with your Subversion
+installation and the operating system. The tests in the \fBfunctional_tests\fR folder
 test tool as a whole on a high level.
 .SH WARNINGS AND LIMITATIONS
 .PP
@@ -217,9 +216,9 @@ version of Subversion, where command \fBsvnadmin dump\fR produces dump
 format 2 (check the first lines of the dump output). However it is
 very sensitive to the errors and warnings produced by Subversion commands.
 The respective checks may need some tweaking for some versions of
-Subversion. In doubt look at the code in src/svnfilteredump/SvnRepository.py.
+Subversion. In doubt look at the code in src/svnfiltereddump/SvnRepository.py.
 .PP
-.B The option \fB--drop-old-tags-and-branches\fR uses just heuristics.
+.B The option --drop-old-tags-and-branches uses just heuristics.
 Multiple ways are known to confuse the tool when using this option. It is
 absolutely essential to verify the list of automatically excluded directories.
 .PP
@@ -244,28 +243,28 @@ directory trees, which are configured to be included/excluded.
 .PP
 Revision data is streamed over constant size buffers - typically just 1MB.
 The only structure that is expected to grow tracks the mapping of input
-to output revisions. It is used to eliminate references to dropped revisions
-from the output. So memory consumption should be very moderate and grow
+to output revisions. So memory consumption should be very moderate and grow
 linear with the number of input revisions processed.
 .SH REPORTING BUGS
 Normally you will have to do the first analysis of any problem yourself
 (unless you are willing #1 to give other people shell access to your
 Subversion server over the Internet #2 to pay TNG Technology Consulting
 to do this work for you \fBand\fR #3 someone at TNG has the time to do the job).
-Sorry for that. Start with the path and
+Sorry for that. First check that source repository is fine. This can be done
+with \fBsvnadmin verify\fR command. If it is fine, go on with the path and
 revision you find in the error messages. Use 'svn log' and 'svn ls' to
 explore your source repository. Possibly use 'svnadmin dump --incremental'
-on the offending revision. Hopefully this will sufficient to track down
-the issue.
+on the offending revision. Hopefully this be will sufficient to understand
+what went wrong.
 .PP
 The preferred way to describe a bug is to write a functional test
 like the ones coming with the tool. If you are unable to do this, you
-may have to describe your problem as a sequence of commands to setup a
+may have to describe your problem as a sequence of svn commands to setup a
 minimal example repository plus your failing svnfiltereddump command.
-Please include the console output produced by your run. If the problem is not
-obvious you may have to describe what is bad about the resulting dump.
+Please include the console output or log file produced by your run. If the
+problem is not obvious you may have to describe what is bad about the resulting dump.
 .PP
-Add your operating system, Pthyon version, Subversion version to the above
+Add your operating system, Python version, Subversion version to the above
 data and send it to harald.wilhelmi@tngtech.com.
 .SH HISTORY AND CREDITS
 In 2011 the author had to reorganize a huge repository for a customer.
@@ -282,7 +281,7 @@ complete rewrite svndumpfilter2. When he was done he asked his customer
 for permission to publish this script - together with his thanks
 to Eric Kidd. However the customer denied this permission.
 .PP
-The author was not willing to except this outcome. So teamed up with
+The author was not willing to except this outcome. So he teamed up with
 some people from  his own company TNG Technology Consulting GmbH to
 write a new tool from scratch. svnfiltereddump started as an exercise
 in Python test driven development at TNG Technology Consulting in
