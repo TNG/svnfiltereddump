@@ -1,7 +1,6 @@
 
 import unittest
 from subprocess import call
-from time import sleep
 
 from functional_test_environment import TestEnvironment
 
@@ -229,13 +228,12 @@ class ScenarioTests(unittest.TestCase):
         env.commit('c1')
         # Revision 2
         env.copy_path('a/bla', 'a/blub')
-        sleep(1) # Work around a stange Subversion 1.7.0 timing issue.
-        env.change_file('a/blub', 'yyy')
+        env.change_file('a/blub', 'yyyy') # Work around a stange Subversion 1.7.0 timing issue - change the size
         env.commit('c2')
 
         env.filter_repo( [ 'a' ] )
 
-        self.assertEquals(env.get_file_content_in_rev('a/blub', 2), 'yyy')
+        self.assertEquals(env.get_file_content_in_rev('a/blub', 2), 'yyyy')
         self.check_log_of_file_in_rev('a/blub', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
 
     def test_add_and_change_into_target(self):
@@ -247,13 +245,12 @@ class ScenarioTests(unittest.TestCase):
         env.commit('c1')
         # Revision 2
         env.copy_path('a/bla', 'b/blub')
-        sleep(1) # Work around a stange Subversion 1.7.0 timing issue.
-        env.change_file('b/blub', 'yyy')
+        env.change_file('b/blub', 'yyyy')
         env.commit('c2')
 
         env.filter_repo( [ 'b' ] )
 
-        self.assertEquals(env.get_file_content_in_rev('b/blub', 2), 'yyy', 'File a/blub correct in rev 2')
+        self.assertEquals(env.get_file_content_in_rev('b/blub', 2), 'yyyy', 'File a/blub correct in rev 2')
         self.check_log_of_file_in_rev('b/blub', 2, [ [ 2, 'c2' ] ])
 
     def test_drop_old_tags_and_branches_with_mixed_revisions(self):
@@ -345,6 +342,38 @@ class ScenarioTests(unittest.TestCase):
         self.assertEquals(env.get_file_content_in_rev('trunk/a/b/bla', 2), 'ZZZ')
         self.check_log_of_file_in_rev('trunk/a/b/bla', 2, [ [2, 'c5' ], [ 1, 'svnfiltereddump boots trap revision' ] ])
         self.assertFalse(env.is_existing_in_rev('tags/NEW1', 2), 'Obsolete branch dropped')
+
+    def test_copy_in_from_ignored_revision(self):
+        env = self.env
+        # Revision 1
+        env.mkdir('interesting')
+        env.mkdir('boring')
+        env.add_file('boring/bla', 'xxx')
+        env.commit('c1')
+        # Revision dropped - all boring
+        env.add_file('boring/x1', '1')
+        env.commit('c2')
+        # Revision dropped - all boring
+        env.change_file('boring/bla', 'yyy')
+        env.commit('c3')
+        env.update() # !!!!
+        # Revision dropped - all boring
+        env.add_file('boring/x2', '2')
+        env.commit('c4')
+        # Revision 2
+        env.add_file('interesting/blub', 'abc')
+        env.commit('c5')
+        # Revision 3
+        env.change_file('interesting/blub', 'cba')
+        env.commit('c6')
+        # Revision 4 - based on dropped revison
+        env.copy_path('boring/bla', 'interesting/bla');
+        env.commit('c7')
+
+        env.filter_repo( [ 'interesting' ] )
+
+        self.assertEquals(env.get_file_content_in_rev('interesting/bla', 4), 'yyy')
+        self.check_log_of_file_in_rev('interesting/bla', 4, [ [4, 'c7' ] ])
         
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+tar cvfz /tmp/svnfiltereddump.tgz src/svnfiltereddump/*.py src/bin man
