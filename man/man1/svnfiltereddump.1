@@ -189,7 +189,13 @@ environment variable.
 If you do anything funny run the automatic tests. To do this easily you need the
 nose package. One way to get nose is using \fBpip\fR (http://pypi.python.org/pypi/pip).
 To run the tests just say \fBnosetests\fR in the folder containing the various test
-folders (tests, functional_tests, integration_tests).
+folders (tests, functional_tests, integration_tests). You may pass folder or test case
+names to \fBnosetests\fR to run just some of the tests.
+.PP
+The tests folder contains classic unit tests which run very fast. The tests in the
+integration_tests folder focus of the interaction of the tool with your Subversion
+installation and the operating system. The tests in the functional_tests folder
+test tool as a whole on a high level.
 .SH WARNINGS AND LIMITATIONS
 .PP
 .B Designed for Pthyon 2.6+.
@@ -222,22 +228,23 @@ target repository. It calls \fBsvnadmin dump\fR only for the revisions
 which are actually relevant for the output. So it may be much faster
 than e.g. svndumpfilter2 if only few revisions need to be dumped. On the
 other hand it may be slower than svndumpfilter2 if almost all revisions
-must be dumped - especially if the revisions contain mostly little data.
+must be dumped - especially if the revisions only contain little data.
 .PP
 The time complexity is expected to grow linear in the
 size of the revisions it has to scan and logarithmic in depth of the
 directory trees, which are configured to be included/excluded.
 .PP
 Revision data is streamed over constant size buffers - typically just 1MB.
-So memory consumption should be very moderate. Growth after initial startup
-is only expected if the --drop-old-tags-and-branches is used - about
-linear with the automatically excluded paths.
+The only structure that is expected to grow tracks the mapping of input
+to output revisions. It is used to eliminate references to dropped revisions
+from the output. So memory consumption should be very moderate and grow
+linear with the number of input revisions processed.
 .SH REPORTING BUGS
 Normally you will have to do the first analysis of any problem yourself
-(unless you are willing 1) to give other people shell access to your
-Subversion server over the Internet 2) to pay TNG Technology Consulting
-to do this work for you \fBand\fR 3) someone at TNG has the time to do the job).
-Sorry for that. Start with path and
+(unless you are willing #1 to give other people shell access to your
+Subversion server over the Internet #2 to pay TNG Technology Consulting
+to do this work for you \fBand\fR #3 someone at TNG has the time to do the job).
+Sorry for that. Start with the path and
 revision you find in the error messages. Use 'svn log' and 'svn ls' to
 explore your source repository. Possibly use 'svnadmin dump --incremental'
 on the offending revision. Hopefully this will sufficient to track down
@@ -248,7 +255,7 @@ like the ones coming with the tool. If you are unable to do this, you
 may have to describe your problem as a sequence of commands to setup a
 minimal example repository plus your failing svnfiltereddump command.
 Please include the console output produced by your run. If the problem is not
-obvious you may have to describe what's bad about the resulting dump.
+obvious you may have to describe what is bad about the resulting dump.
 .PP
 Add your operating system, Pthyon version, Subversion version to the above
 data and send it to harald.wilhelmi@tngtech.com.
@@ -292,6 +299,6 @@ License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 .SH "SOURCE"
-The definte address to get this tool is https://github.com/HaraldWilhelmi/svnfiltereddump.
+The official address to get this tool is https://github.com/HaraldWilhelmi/svnfiltereddump.
 .SH "SEE ALSO"
 svn(1), svnadmin(1), http://svn.tartarus.org/sgt/svn-tools/svndumpfilter2?view=markup
