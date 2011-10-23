@@ -23,6 +23,7 @@ from SvnRepository import SvnRepository
 from Config import Config
 from InterestingPaths import InterestingPaths
 from ParentDirectoryLumpGenerator import ParentDirectoryLumpGenerator
+from RevisionMapper import RevisionMapper
 
 console_handler = None
 
@@ -72,8 +73,9 @@ def run():
 
     source_repository = SvnRepository(config.source_repository)
 
+    revision_mapper = RevisionMapper(config)
     dump_writer = SvnDumpWriter(stdout)
-    with LumpPostProcessor(config, dump_writer) as lump_post_processor:
+    with LumpPostProcessor(config, revision_mapper, dump_writer) as lump_post_processor:
         lump_builder = LumpBuilder(config, source_repository, interesting_paths, lump_post_processor)
         parent_directory_lump_generator = ParentDirectoryLumpGenerator(interesting_paths, lump_builder)
         lump_post_processor.parent_directory_lump_generator = parent_directory_lump_generator

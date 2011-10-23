@@ -2,7 +2,7 @@
 from unittest import TestCase
 from StringIO import StringIO
 
-from svnfiltereddump import Config, LumpPostProcessor, ContentTin, SvnLump
+from svnfiltereddump import Config, LumpPostProcessor, ContentTin, SvnLump, RevisionMapper
 
 from DumpWriterMock import DumpWriterMock
 
@@ -19,7 +19,8 @@ class TestLumpPostProcessor(TestCase):
     def setUp(self):
         self.config = Config( [ '--no-extra-mkdirs', '/dummy' ] )
         self.writer = DumpWriterMock(self)
-        self.processor = LumpPostProcessor(self.config, self.writer)
+        self.revision_mapper = RevisionMapper(self.config)
+        self.processor = LumpPostProcessor(self.config, self.revision_mapper, self.writer)
         self.processor.parent_directory_lump_generator = ParentDirectoryGeneratorMock(self.processor)
 
     def test_dont_drop_empty_revs(self):
@@ -59,6 +60,34 @@ class TestLumpPostProcessor(TestCase):
         self.assertEqual(self.writer.lumps[0].get_header('Revision-number'), '13')
         self.assertEqual(self.writer.lumps[1].get_header('Node-kind'), 'file')
    
+    def test_map_dropped_revs(self):
+        lump = SvnLump()
+        lump.set_header('Revision-number', '12')
+        self.processor.write_lump(lump)
+
+        lump = SvnLump()
+        lump.set_header('Node-kind', 'file')
+        self.processor.write_lump(lump)
+
+        # Dropped rev
+        lump = SvnLump()
+        lump.set_header('Revision-number', '13')
+        self.processor.write_lump(lump)
+
+        lump = SvnLump()
+        lump.set_header('Revision-number', '14')
+        self.processor.write_lump(lump)
+
+        lump = SvnLump()
+        lump.set_header('Node-kind', 'file')
+        lump.set_header('Node-copyfrom-rev', '13')
+        self.processor.write_lump(lump)
+
+
+        self.assertEqual(len(self.writer.lumps), 4)
+        self.assertEqual(self.writer.lumps[2].get_header('Revision-number'), '14')
+        self.assertEqual(self.writer.lumps[3].get_header('Node-copyfrom-rev'), '12')
+
     def test_fix_content_length_text(self):
         lump = SvnLump()
         lump.set_header('Node-kind', 'file')

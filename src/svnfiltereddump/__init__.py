@@ -32,6 +32,7 @@ from SvnRepository import SvnRepository
 #
 from Config import Config
 from InterestingPaths import InterestingPaths
+from RevisionMapper import RevisionMapper
 from CheckedCommandFileHandle import CheckedCommandFileHandle
 from ContentTin import ContentTin
 from ParentDirectoryLumpGenerator import ParentDirectoryLumpGenerator
