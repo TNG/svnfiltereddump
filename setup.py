@@ -8,7 +8,7 @@ setup(
     description='Extracts parts from Subversion repositories',
     author='Harald Wilhelmi',
     author_email='harald.wilhelmi@tngtech.com',
-    url='https://github.com/HaraldWilhelmi/svnfiltereddump',
+    url='https://github.com/tng/svnfiltereddump',
     packages=['svnfiltereddump'],
     package_dir = { '': 'src' },
     long_description="""\
