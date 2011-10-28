@@ -9,6 +9,20 @@ repository must be given on the command line. A list of paths to extract
 may given on command line or in one or more input file(s). It is also possible
 to skip the revision history before a given starting revision.
 
+COMPATIBILITY
+-------------
+
+This tool was designed to run on Linux. It is assumed to work on other Unix-ish
+systems. It will certainly not work on systems with no IPC over pipes or with
+backslashes in path names.
+
+INSTALLATION
+------------
+
+Presently the preferred way of installation is via pip:
+
+    sudo pip install svnfiltereddump
+ 
 MANUEL INSTALLATION
 -------------------
 

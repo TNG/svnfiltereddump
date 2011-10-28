@@ -14,7 +14,7 @@ setup(
     long_description="""\
         The svnfiltereddump tool allows to extract parts of Subversion
         repositories. It is a bit like svndumpfilter or svndumpfilter2.
-        But it has less limitations and has be ability to drop drop
+        But it has less limitations and has the ability to drop drop
         old revisions.
     """,
     classifiers=[
@@ -22,8 +22,8 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
         "Development Status :: 4 - Beta",
-        "Intended Audience :: Operators",
-        "Topic :: Development",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Version Control",
     ],
     keywords='subversion',
     license='GPL',
