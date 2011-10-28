@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from distutils.core import setup
 
 setup(
     name='svnfiltereddump',
@@ -10,6 +10,7 @@ setup(
     author_email='harald.wilhelmi@tngtech.com',
     url='https://github.com/HaraldWilhelmi/svnfiltereddump',
     packages=['svnfiltereddump'],
+    package_dir = { '': 'src' },
     long_description="""\
         The svnfiltereddump tool allows to extract parts of Subversion
         repositories. It is a bit like svndumpfilter or svndumpfilter2.
@@ -19,19 +20,12 @@ setup(
     classifiers=[
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
         "Development Status :: 4 - Beta",
         "Intended Audience :: Operators",
         "Topic :: Development",
     ],
     keywords='subversion',
     license='GPL',
-    install_requires=[
-        'setuptools',
-        'svnfiltereddump',
-    ],
-    entry_points = {
-        'console_scripts': [
-            'svnfiltereddump = svnfiltereddump.Main:run'
-        ]
-    }
+    scripts = [ 'src/bin/svnfiltereddump' ]
 )

@@ -1,6 +1,19 @@
 
-Please look at the svnfiltereddump man page.
-If it is not installed on your system, you can display it by typing
+svnfiltereddump
+===============
+
+The svnfiltereddump tool is meant to extract portions of repositories of the
+Subversion source control system. It's output can be loaded with Subversion's
+"svnadmin load" command into a new Subversion repository. The source
+repository must be given on the command line. A list of paths to extract
+may given on command line or in one or more input file(s). It is also possible
+to skip the revision history before a given starting revision.
+
+MANUEL INSTALLATION
+-------------------
+
+Please look at the svnfiltereddump man page. If it is not installed on
+your system, you can display it by typing
 
     man man/man1/svnfiltereddump.1
 
@@ -8,5 +21,4 @@ or
 
     nroff -man man/man1/svnfiltereddump.1 | less
 
-in directory containing this README. In contains also basic installation
-instructions.
+in directory containing this README.
