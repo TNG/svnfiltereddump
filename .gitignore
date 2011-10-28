@@ -1,3 +1,4 @@
 *.pyc
-src/dist
-src/build
+.tox
+MANIFEST
+build
