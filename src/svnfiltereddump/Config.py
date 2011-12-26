@@ -2,7 +2,7 @@
 from optparse import OptionParser
 from string import join
 
-VERSION = '1.0 Beta'
+VERSION = '1.0 Beta4'
 
 def _parse_command_line(command_line):
     parser = OptionParser("usage: %prog [options] <absolute repository path> <include path> ...\n\nVersion " + VERSION)
