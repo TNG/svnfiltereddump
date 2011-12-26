@@ -38,6 +38,7 @@ def _setup_interesting_paths(config):
     return interesting_paths
 
 def _setup_early_logging():
+    global console_handler
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     console_formatter = logging.Formatter('%(levelname)s %(message)s')

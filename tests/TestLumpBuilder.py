@@ -40,7 +40,27 @@ class TestLumpBuilder(TestCase):
         self.repo.files_by_name_and_revision['file/in/source/repo_rev17'] = { 17: 'xxx' }
         self.repo.properties_by_path_and_revision['file/in/source/repo_rev17'] = { 17:  { 'a': 'x1', 'b': 'x2' } }
         
-        self.builder.add_path_from_source_repository('file', 'a/b', 'file/in/source/repo_rev17', 17)
+        self.builder.get_node_from_source('file', 'a/b', 'add', 'file/in/source/repo_rev17', 17)
+        
+        self.assertEqual(len(self.writer.lumps), 1)
+        lump = self.writer.lumps[0]
+        self.assertEqual(
+            lump.get_header_keys(),
+            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length', 'Text-content-md5' ]
+        )
+        self.assertEqual(lump.get_header('Node-path'), 'a/b')
+        self.assertEqual(lump.get_header('Node-kind'), 'file')
+        self.assertEqual(lump.get_header('Node-action'), 'add')
+        self.assertEqual(lump.get_header('Text-content-length'), '3')
+        self.assertEqual(lump.get_header('Text-content-md5'), 'FAKEMD5')
+        self.assertEqual(lump.properties, { 'a': 'x1', 'b': 'x2' } )
+        self.writer.check_content_tin_of_lump_nr(0, 'xxx')
+
+    def test_add_file_from_source_repo_via_recursive_call(self):
+        self.repo.files_by_name_and_revision['file/in/source/repo_rev17'] = { 17: 'xxx' }
+        self.repo.properties_by_path_and_revision['file/in/source/repo_rev17'] = { 17:  { 'a': 'x1', 'b': 'x2' } }
+        
+        self.builder.get_recursively_from_source('file', 'a/b', 'add', 'file/in/source/repo_rev17', 17)
         
         self.assertEqual(len(self.writer.lumps), 1)
         lump = self.writer.lumps[0]
@@ -60,7 +80,7 @@ class TestLumpBuilder(TestCase):
         self.repo.tree_by_path_and_revision['dir/in/source/repo_rev2'] = { 2: [ 'dir/in/source/repo_rev2/' ] }
         self.repo.properties_by_path_and_revision['dir/in/source/repo_rev2'] = { 2:  { 'a2': 'y1', 'b2': 'y2' } }
 
-        self.builder.add_path_from_source_repository('dir', 'a/b', 'dir/in/source/repo_rev2/', 2)
+        self.builder.get_node_from_source('dir', 'a/b', 'add', 'dir/in/source/repo_rev2/', 2)
         
         self.assertEqual(len(self.writer.lumps), 1)
         lump = self.writer.lumps[0]
@@ -75,7 +95,7 @@ class TestLumpBuilder(TestCase):
         self.writer.check_content_tin_of_lump_nr(0, None)
 
     def test_add_path_from_target(self):
-        self.builder.add_path_from_target('new/path', 'file', 'source/path', 17)
+        self.builder.get_path_from_target('file', 'new/path', 'add', 'source/path', 17)
 
         self.assertEqual(len(self.writer.lumps), 1)
         lump = self.writer.lumps[0]
@@ -105,7 +125,7 @@ class TestLumpBuilder(TestCase):
         sample_tin = ContentTin(sample_fh, 3, 'FAKEMD5')
         sample_lump.content = sample_tin
 
-        self.builder.change_lump_from_add_lump(sample_lump)
+        self.builder.change_lump_from_add_or_replace_lump(sample_lump)
 
         self.assertEqual(len(self.writer.lumps), 1)
         lump = self.writer.lumps[0]
@@ -175,7 +195,7 @@ class TestLumpBuilder(TestCase):
         self.repo.files_by_name_and_revision['source/dir/y'] = { 2: 'y' }
         self.repo.properties_by_path_and_revision['source/dir/y'] = { 2: { } }
         self.interesting_paths.mark_path_as_interesting('a/b')
-        self.builder.add_tree_from_source('a/b', 'source/dir', 2)
+        self.builder.get_recursively_from_source('dir', 'a/b', 'add', 'source/dir', 2)
 
         self.assertEqual(len(self.writer.lumps), 3)
         
@@ -226,7 +246,7 @@ class TestLumpBuilder(TestCase):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.interesting_paths.mark_path_as_boring('a/b/x')
 
-        self.builder.add_tree_from_source('a/b', 'source/dir/', 2)
+        self.builder.get_recursively_from_source('dir', 'a/b', 'add', 'source/dir/', 2)
 
         self.assertEqual(len(self.writer.lumps), 2)
         
@@ -263,7 +283,7 @@ class TestLumpBuilder(TestCase):
         self.config.drop_old_tags_and_branches = True
         self.interesting_paths.mark_path_as_interesting('a')
 
-        self.builder.add_tree_from_source('a/tags/NEW_TAG', 'source/dir/', 5)
+        self.builder.get_recursively_from_source('dir', 'a/tags/NEW_TAG', 'add', 'source/dir/', 5)
 
         self.assertEqual(len(self.writer.lumps), 0)
         self.assertFalse(self.interesting_paths.is_interesting('a/tags/NEW_TAG'))
@@ -277,7 +297,7 @@ class TestLumpBuilder(TestCase):
         self.config.drop_old_tags_and_branches = True
         self.interesting_paths.mark_path_as_interesting('a')
 
-        self.builder.add_tree_from_source('a/tags/OLD_TAG', 'source/dir/', 5)
+        self.builder.get_recursively_from_source('dir', 'a/tags/OLD_TAG', 'add', 'source/dir/', 5)
 
         self.assertEqual(len(self.writer.lumps), 0)
         self.assertFalse(self.interesting_paths.is_interesting('a/tags/OLD_TAG'))
@@ -301,7 +321,7 @@ class TestLumpBuilder(TestCase):
         self.config.drop_old_tags_and_branches = True
         self.interesting_paths.mark_path_as_interesting('a')
 
-        self.builder.add_tree_from_source('a', 'source/dir/', 5)
+        self.builder.get_recursively_from_source('dir', 'a', 'add', 'source/dir/', 5)
         
         self.assertEqual(len(self.writer.lumps), 2)
         self.assertFalse(self.interesting_paths.is_interesting('a/tags/NEW_TAG'))
@@ -347,7 +367,7 @@ class TestLumpBuilder(TestCase):
         self.config.drop_old_tags_and_branches = True
         self.interesting_paths.mark_path_as_interesting('a')
 
-        self.builder.add_tree_from_source('a', 'source/dir/', 5)
+        self.builder.get_recursively_from_source('dir', 'a', 'add', 'source/dir/', 5)
 
         self.assertEqual(len(self.writer.lumps), 2)
         self.assertFalse(self.interesting_paths.is_interesting('a/tags/OLD_TAG'))

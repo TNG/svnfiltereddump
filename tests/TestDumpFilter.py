@@ -157,6 +157,37 @@ Node-copyfrom-path: x/y
 
 """
 
+DUMP_COPY_DIR_X_TO_A = """SVN-fs-dump-format-version: 2
+
+UUID: 9fda7f02-01c1-44b6-ae56-f8733c7e9818
+
+Revision-number: 3
+Prop-content-length: 105
+Content-length: 105
+
+K 7
+svn:log
+V 3
+Bl
+
+K 10
+svn:author
+V 8
+wilhelmh
+K 8
+svn:date
+V 27
+2011-09-04T10:27:15.088237Z
+PROPS-END
+
+Node-path: a
+Node-kind: dir
+Node-action: add
+Node-copyfrom-rev: 2
+Node-copyfrom-path: x
+
+"""
+
 
 DUMP_DELETE_FILE_A_B = """SVN-fs-dump-format-version: 2
 
@@ -211,6 +242,42 @@ PROPS-END
 
 Node-path: a/b
 Node-action: delete
+
+"""
+
+DUMP_REPLACE_FILE_WITH_NEW_CONTENT = """SVN-fs-dump-format-version: 2
+
+UUID: 9fda7f02-01c1-44b6-ae56-f8733c7e9818
+
+Revision-number: 3
+Prop-content-length: 105
+Content-length: 105
+
+K 7
+svn:log
+V 3
+Bl
+
+K 10
+svn:author
+V 8
+wilhelmh
+K 8
+svn:date
+V 27
+2011-09-04T10:27:15.088237Z
+PROPS-END
+
+Node-path: a/bla
+Node-kind: file
+Node-action: replace
+Text-content-length: 4
+Text-content-md5: 7bf20d8965c6940c058380b43275e552
+Text-content-sha1: 257bdf88ee3a7f7fbf8fd131a29184bd6eec6003
+Content-length: 4
+
+ghi
+
 
 """
 
@@ -288,7 +355,7 @@ class TestDumpFilter(TestCase):
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            [ 'add_path_from_source_repository', 'file', 'a/b', 'x/y', 2 ]
+            [ 'get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2 ]
         )
 
     def test_copy_in_start_rev(self):
@@ -302,7 +369,7 @@ class TestDumpFilter(TestCase):
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            [ 'add_path_from_source_repository', 'file', 'a/b', 'x/y', 2 ]
+            [ 'get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2 ]
         )
 
     def test_copy_in_with_change(self):
@@ -316,10 +383,10 @@ class TestDumpFilter(TestCase):
         self.assertEqual(len(self.builder.call_history), 3)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1], 
-            [ 'add_path_from_source_repository', 'file', 'a/b', 'x/y', 2 ]
+            [ 'get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2 ]
         )
 
-        self.assertEqual(self.builder.call_history[2][0], 'change_lump_from_add_lump')
+        self.assertEqual(self.builder.call_history[2][0], 'change_lump_from_add_or_replace_lump')
         lump = self.builder.call_history[2][1]
         self.assertEqual(
             lump.get_header_keys(),
@@ -345,7 +412,7 @@ class TestDumpFilter(TestCase):
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            [ 'add_tree_from_source', 'a/b', 'x/y', 2 ]
+            [ 'get_recursively_from_source', 'dir', 'a/b', 'add', 'x/y', 2 ]
         )
         
     def test_copy_to_path_above_from_boring(self):
@@ -361,7 +428,7 @@ class TestDumpFilter(TestCase):
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            ['add_path_from_source_repository', 'file', 'a/b/c1', 'x/y/c1', 2]
+            ['get_recursively_from_source', 'file', 'a/b/c1', 'add', 'x/y/c1', 2]
         )
 
     def test_copy_to_path_above_from_interesting(self):
@@ -378,8 +445,26 @@ class TestDumpFilter(TestCase):
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            [ 'add_path_from_target', 'a/b/c1', 'file', 'x/y/c1', 2 ]
+            [ 'get_path_from_target', 'file', 'a/b/c1', 'add', 'x/y/c1', 2 ]
         )
+
+    def test_copy_to_path_above_2_from_interesting(self):
+        self.interesting_paths.mark_path_as_interesting('x/b')
+        self.interesting_paths.mark_path_as_interesting('a/b')
+        self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_TO_A
+        self.repo.tree_by_path_and_revision['x'] = { 2: [ 'x/', 'x/b/', 'x/b/c1', 'x/b/c2' ] }
+        self.repo.tree_by_path_and_revision['x/b'] = { 2: [ 'x/b/', 'x/b/c1', 'x/b/c2' ] }
+        self.repo.files_by_name_and_revision['x/b/c1'] = { 2: "xxx\n\yy1\n" }
+        self.repo.files_by_name_and_revision['x/b/c2'] = { 2: "xxx\n\yy2\n" }
+        self.repo.properties_by_path_and_revision['x/b'] = { 2: { 'prop1': 'value1' } }
+        self.repo.properties_by_path_and_revision['x/b/c1'] = { 2: { 'prop2': 'value2' } }
+        self.repo.properties_by_path_and_revision['x/b/c2'] = { 2: { } }
+
+        self.dump_filter.process_revision(3, None)
+        self._verfiy_revision_header()
+        self.assertEqual(self.builder.call_history[1:], [
+            [ 'get_path_from_target', 'dir', 'a/b', 'add', 'x/b', 2 ]
+        ] )
 
     def test_delete_inside(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
@@ -429,6 +514,26 @@ class TestDumpFilter(TestCase):
 
         self.assertEqual(len(self.builder.call_history), 1)
         self._verfiy_revision_header()
+
+    def test_replace_file_with_new_content(self):
+        self.interesting_paths.mark_path_as_interesting('a')
+        self.repo.dumps_by_revision[3] = DUMP_REPLACE_FILE_WITH_NEW_CONTENT
+
+        self.dump_filter.process_revision(3, None)
+        
+        self._verfiy_revision_header()
+
+        self.assertEqual(self.builder.call_history[1][0], 'pass_lump' )
+        lump = self.builder.call_history[1][1]
+        self.assertEqual(
+            lump.get_header_keys(),
+            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
+            'Text-content-md5', 'Text-content-sha1', 'Content-length' ]
+        )
+        self.assertEqual(lump.get_header('Node-path'), 'a/bla')
+        self.assertEqual(lump.get_header('Node-kind'), 'file')
+        self.assertEqual(lump.get_header('Node-action'), 'replace')
+        self._assertTin(lump, "ghi\n")
 
     def _verfiy_revision_header(self):
         self.assertEqual(self.builder.call_history[0][0], 'pass_lump')

@@ -14,4 +14,4 @@ class BootsTrapper(object):
         for path in paths_of_interest:
             kind = self.source_repository.get_type_of_path(path, revision)
             if kind:
-                builder.add_tree_from_source(path, path, revision)    
+                builder.get_recursively_from_source(kind, path, 'add', path, revision)    

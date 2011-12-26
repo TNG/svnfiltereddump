@@ -9,10 +9,10 @@ class LumpBuilderMock(object):
         self.call_history.append( [ 'delete_path', path ] )
     def mkdir(self, path):
         self.call_history.append( [ 'mkdir', path ] )
-    def add_path_from_source_repository(self, kind, path, source_path, source_rev):
-        self.call_history.append( [ 'add_path_from_source_repository',  kind, path, source_path, source_rev ] )
-    def change_lump_from_add_lump(self, lump):
-        self.call_history.append( [ 'change_lump_from_add_lump', self._clone_lump_to_lump_with_fake_bin(lump) ] )
+    def get_node_from_source(self, kind, path, action, source_path, source_rev):
+        self.call_history.append( [ 'get_node_from_source',  kind, path, action, source_path, source_rev ] )
+    def change_lump_from_add_or_replace_lump(self, lump):
+        self.call_history.append( [ 'change_lump_from_add_or_replace_lump', self._clone_lump_to_lump_with_fake_bin(lump) ] )
     def revision_header(self, rev):
         self.call_history.append( [ 'revision_header', rev ] )
     def dump_header_lumps(self):
@@ -21,10 +21,10 @@ class LumpBuilderMock(object):
         self.call_history.append( [ 'revision_header', rev, log ] )
     def pass_lump(self, lump):
         self.call_history.append( [ 'pass_lump', self._clone_lump_to_lump_with_fake_bin(lump) ] )
-    def add_tree_from_source(self, path, source_path, source_rev):
-        self.call_history.append( [ 'add_tree_from_source', path, source_path, source_rev ] )
-    def add_path_from_target(self, path, kind, from_path, from_rev):
-         self.call_history.append( [ 'add_path_from_target', path, kind, from_path, from_rev ] )
+    def get_recursively_from_source(self, kind, path, action, source_path, source_rev):
+        self.call_history.append( [ 'get_recursively_from_source', kind, path, action, source_path, source_rev ] )
+    def get_path_from_target(self, kind, path, action, from_path, from_rev):
+         self.call_history.append( [ 'get_path_from_target', kind, path, action, from_path, from_rev ] )
     def _clone_lump_to_lump_with_fake_bin(self, lump):
         new_lump = copy(lump)
         if lump.content:

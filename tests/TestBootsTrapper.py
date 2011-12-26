@@ -33,7 +33,7 @@ class TestBootsTrapper(TestCase):
 
         self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
-        self.assertEqual(self.builder.call_history[1], [ 'add_tree_from_source', 'a/b', 'a/b', 3 ])
+        self.assertEqual(self.builder.call_history[1], [ 'get_recursively_from_source', 'file', 'a/b', 'add', 'a/b', 3 ])
 
     def test_simple_dir(self):
         self.interesting_paths.mark_path_as_interesting('a/b/c')
@@ -45,7 +45,7 @@ class TestBootsTrapper(TestCase):
 
         self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
-        self.assertEqual(self.builder.call_history[1], [ 'add_tree_from_source', 'a/b/c', 'a/b/c', 3 ])
+        self.assertEqual(self.builder.call_history[1], [ 'get_recursively_from_source', 'dir', 'a/b/c', 'add', 'a/b/c', 3 ])
 
     def test_multi_dir(self):
         self.interesting_paths.mark_path_as_interesting('a/a')
@@ -63,9 +63,9 @@ class TestBootsTrapper(TestCase):
 
         self.assertEqual(len(self.builder.call_history), 4)
         self._verfiy_revision_header()
-        self.assertEqual(self.builder.call_history[1], [ 'add_tree_from_source', 'a/a', 'a/a', 3 ])
-        self.assertEqual(self.builder.call_history[2], [ 'add_tree_from_source', 'a/b/x', 'a/b/x', 3 ])
-        self.assertEqual(self.builder.call_history[3], [ 'add_tree_from_source', 'a/b/y', 'a/b/y', 3 ])
+        self.assertEqual(self.builder.call_history[1], [ 'get_recursively_from_source', 'dir', 'a/a', 'add', 'a/a', 3 ])
+        self.assertEqual(self.builder.call_history[2], [ 'get_recursively_from_source', 'dir', 'a/b/x', 'add', 'a/b/x', 3 ])
+        self.assertEqual(self.builder.call_history[3], [ 'get_recursively_from_source', 'file', 'a/b/y', 'add', 'a/b/y', 3 ])
 
     def _verfiy_revision_header(self):
         self.assertEqual(self.builder.call_history[0], [ 'revision_header', 3, 'svnfiltereddump boots trap revision' ])

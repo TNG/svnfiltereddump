@@ -27,11 +27,13 @@ class LumpBuilder(object):
         lump.set_header('Node-action', 'add')
         self.dump_writer.write_lump(lump)
 
-    def add_path_from_source_repository(self, kind, path, from_path, from_rev):
+    def get_node_from_source(self, kind, path, action, from_path, from_rev):
+        assert kind == 'file' or kind == 'dir'
+        assert action == 'add' or action =='replace'
+
         if self._is_obsolete_tag_or_branch_copy(path, from_rev):
             self._handle_obsolete_tag_or_branch(path)
             return
-        assert kind == 'file' or kind =='dir'
 
         path = normpath(path)
         repo = self.source_repository
@@ -39,7 +41,7 @@ class LumpBuilder(object):
 
         lump.set_header('Node-path', path)
         lump.set_header('Node-kind', kind)
-        lump.set_header('Node-action', 'add')
+        lump.set_header('Node-action', action)
 
         if kind == 'file':
             tin = repo.get_tin_for_file(from_path, from_rev)
@@ -61,16 +63,19 @@ class LumpBuilder(object):
         info('Excluding obsolete tag/branch: ' + path)
         self.interesting_paths.mark_path_as_boring(path)
 
-    def add_path_from_target(self, path, kind, from_path, from_rev):
+    def get_path_from_target(self, kind, path, action, from_path, from_rev):
+        assert kind == 'file' or kind =='dir'
+        assert action == 'add' or action =='replace'
+
         lump = SvnLump()
         lump.set_header('Node-path', path)
         lump.set_header('Node-kind', kind)
-        lump.set_header('Node-action', 'add')
+        lump.set_header('Node-action', action)
         lump.set_header('Node-copyfrom-path', from_path)
         lump.set_header('Node-copyfrom-rev', str(from_rev))
         self.dump_writer.write_lump(lump)
 
-    def change_lump_from_add_lump(self, sample_lump):
+    def change_lump_from_add_or_replace_lump(self, sample_lump):
         lump = copy(sample_lump)
         lump.set_header('Node-action', 'change')
         for header_name in [
@@ -108,10 +113,21 @@ class LumpBuilder(object):
     def pass_lump(self, lump):
         self.dump_writer.write_lump(lump)
 
-    def add_tree_from_source(self, path, from_path, from_rev):
+    def get_recursively_from_source(self, kind, path, action, from_path, from_rev):
+        assert kind == 'file' or kind =='dir'
+        assert action == 'add' or action =='replace'
+
         if self._is_obsolete_tag_or_branch_copy(path, from_rev):
             self._handle_obsolete_tag_or_branch(path)
             return
+        if kind == 'file':
+            self.get_node_from_source(kind, path, action, from_path, from_rev)
+        else:
+            if action == 'replace':
+                self.delete_path(path)
+            self._add_tree_from_source(path, from_path, from_rev)
+
+    def _add_tree_from_source(self, path, from_path, from_rev):
         if path[-1:] != '/' and len(path)>0:
             path += '/'
         if from_path[-1:] != '/':
@@ -127,4 +143,4 @@ class LumpBuilder(object):
                 if sub_path == '':
                     continue
                 if self.interesting_paths.is_interesting(sub_path):
-                    self.add_path_from_source_repository(kind, sub_path, from_sub_path, from_rev)
+                    self.get_node_from_source(kind, sub_path, 'add', from_sub_path, from_rev)

@@ -45,6 +45,28 @@ class ComandLineFeatureTests(unittest.TestCase):
         self.assertEquals(env.get_property_in_rev('a/bla', 2, 'some_prop'), 'prop_value', 'File a/bla property correct in rev 2')
         self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
 
+    def test_quiet(self):
+        env = self.env
+        # Revision 1
+        env.mkdir('a')
+        env.add_file('a/bla', 'xxx')
+        env.propset('a/bla', 'some_prop', 'prop_value')
+        env.mkdir('b')
+        env.add_file('b/blub', 'yyy')
+        env.commit('c1')
+        # Revision 2
+        env.change_file('a/bla', 'zzz')
+        env.commit('c2')
+
+        env.filter_repo( [ '-q', 'a' ] )
+
+        self.assertTrue(env.is_existing_in_rev('a', 1), 'Dir a was copied in rev 1')
+        self.assertFalse(env.is_existing_in_rev('b', 1), 'Dir b was not copied in rev 1')
+        self.assertEquals(env.get_file_content_in_rev('a/bla', 1), 'xxx', 'File a/bla correct in rev 1')
+        self.assertEquals(env.get_file_content_in_rev('a/bla', 2), 'zzz', 'File a/bla correct in rev 2')
+        self.assertEquals(env.get_property_in_rev('a/bla', 2, 'some_prop'), 'prop_value', 'File a/bla property correct in rev 2')
+        self.check_log_of_file_in_rev('a/bla', 2, [ [ 2, 'c2' ], [ 1, 'c1' ] ])
+
     def test_include(self):
         env = self.env
         env.mkdir('x/a')

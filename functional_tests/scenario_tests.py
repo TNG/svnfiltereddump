@@ -374,6 +374,44 @@ class ScenarioTests(unittest.TestCase):
 
         self.assertEquals(env.get_file_content_in_rev('interesting/bla', 4), 'yyy')
         self.check_log_of_file_in_rev('interesting/bla', 4, [ [4, 'c7' ] ])
+
+    def test_basic_replace(self):
+        env = self.env
+        # Revision 1
+        env.mkdir('interesting')
+        env.add_file('interesting/bla', 'xxx')
+        env.commit('c1')
+        # Revision 2
+        env.rm_file('interesting/bla')
+        env.add_file('interesting/bla', 'yyy')
+        env.commit('c2')
+       
+        env.filter_repo( [ 'interesting' ] )
         
+        self.assertEquals(env.get_file_content_in_rev('interesting/bla', 1), 'xxx')
+        self.assertEquals(env.get_file_content_in_rev('interesting/bla', 2), 'yyy')
+        self.check_log_of_file_in_rev('interesting/bla', 2, [ [2, 'c2' ] ])
+
+    def test_replace_dir(self):
+        env = self.env
+        # Revision 1
+        env.mkdir('interesting')
+        env.mkdir('interesting/a')
+        env.add_file('interesting/a/bla', 'xxx')
+        env.commit('c1')
+        # Revision 2
+        env.rm_file('interesting/a')
+        env.mkdir('interesting/a')
+        env.add_file('interesting/a/blub', 'yyy')
+        env.commit('c2')
+       
+        env.filter_repo( [ 'interesting' ] )
+        
+        self.assertEquals(env.get_file_content_in_rev('interesting/a/bla', 1), 'xxx')
+        self.assertEquals(env.get_file_content_in_rev('interesting/a/blub', 2), 'yyy')
+        self.assertFalse(env.is_existing_in_rev('interesting/a/blub', 1), 'File blub not existent in rev 1')
+        self.assertFalse(env.is_existing_in_rev('interesting/a/bla', 2), 'File bla not existent in rev 2')
+        self.check_log_of_file_in_rev('interesting/a/blub', 2, [ [2, 'c2' ] ])
+
 if __name__ == '__main__':
     unittest.main()
