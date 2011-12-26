@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='svnfiltereddump',
-    version='1.0beta',
+    version='1.0beta2',
     description='Extracts parts from Subversion repositories',
     author='Harald Wilhelmi',
     author_email='harald.wilhelmi@tngtech.com',
