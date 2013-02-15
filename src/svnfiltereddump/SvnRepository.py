@@ -139,6 +139,8 @@ class SvnRepository(object):
                 # SVN 1.7
                 'WARNING 0x0000: Referencing data in revision \d+, which is older than the oldest dumped revision \(r\d+\)',
                 'WARNING 0x0000: The range of revisions dumped contained references to copy sources outside that range\.',
+                'WARNING 0x0001: Mergeinfo referencing revision\(s\) prior to the oldest dumped revision \(r\d+\)\. Loading this dump may result in invalid mergeinfo\.',
+                'WARNING 0x0001: The range of revisions dumped contained mergeinfo which reference revisions outside that range\.',
             ]
         )
 
