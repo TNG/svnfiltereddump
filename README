@@ -36,3 +36,10 @@ or
     nroff -man man/man1/svnfiltereddump.1 | less
 
 in directory containing this README.
+
+CHANGE HISTORY
+--------------
+
+1.0beta4:
+
+- Bug fix: Node-action 'replace' not supported.
