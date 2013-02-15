@@ -413,5 +413,51 @@ class ScenarioTests(unittest.TestCase):
         self.assertFalse(env.is_existing_in_rev('interesting/a/bla', 2), 'File bla not existent in rev 2')
         self.check_log_of_file_in_rev('interesting/a/blub', 2, [ [2, 'c2' ] ])
 
+    def test_brocken_merge_tracking(self):
+        env = self.env
+        # Revision 1 - dropped
+        env.mkdir('trunk')
+        env.add_file('trunk/bla', 'xxx')
+        env.mkdir('branches')
+        env.commit('c1')
+        # Revision 2 - dropped
+        env.copy_path('trunk', 'branches/obsolete')
+        env.commit('c2')
+        # Revision 3 - dropped
+        env.change_file('branches/obsolete/bla', 'yyy')
+        env.commit('c3')
+        # Revision 4 -> New Revision 1
+        env.add_file('branches/obsolete/blub', 'abc')
+        env.commit('c4')
+        # Revision 5 -> New Revision 2
+        env.update()
+        env.merge_reintegrate('^/branches/obsolete', 'trunk')
+        env.commit('c5')
+        # Revision 6 -> New Revision 3
+        env.change_file('trunk/bla', 'zzz')
+        env.commit('c6')
+
+        env.filter_repo( [ '--start-rev', '4', '--drop-old-tags-and-branches', '/' ] )
+
+        self.assertEquals(
+            env.get_file_content_in_rev('trunk/bla', 2),
+            'yyy',
+            'Merge was done (bla)'
+        )
+        self.assertEquals(
+            env.get_file_content_in_rev('trunk/blub', 2),
+            'abc',
+            'Merge was done (blub)'
+        )
+        self.assertFalse(
+            env.is_existing_in_rev('branches/obsolete', 1),
+            'Obsolete branch was dropped'
+        )
+        self.assertEquals(
+            env.get_file_content_in_rev('trunk/bla', 3),
+            'zzz',
+            'Filter continued after broken merge info'
+        )
+        
 if __name__ == '__main__':
     unittest.main()

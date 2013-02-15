@@ -93,6 +93,10 @@ class TestEnvironment:
         with TempChDir(self.source_repo_working_copy):
             check_call( [ 'svn', 'rm', name ], stdout=self.dev_null)
 
+    def merge_reintegrate(self, source, target):
+        with TempChDir(self.source_repo_working_copy):
+            check_call( [ 'svn', 'merge', '--reintegrate', source, target ], stdout=self.dev_null)
+
     def propset(self, path, key, value):
         with TempChDir(self.source_repo_working_copy):
             check_call( [ 'svn', 'propset', key, value, path], stdout=self.dev_null)
