@@ -68,7 +68,7 @@ class SvnRepository(object):
         return changes
 
     def get_tin_for_file(self, path, rev):
-        # It is ugly to read the file twice. But f we don't want to keep the whole file in
+        # It is ugly to read the file twice. But we don't want to keep the whole file in
         # memory. And:  We just need to calculate the MD5 checksum BEFORE we copy it to the output.
         md5_calculator = md5()
         size = 0
