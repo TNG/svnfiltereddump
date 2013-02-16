@@ -458,6 +458,18 @@ class ScenarioTests(unittest.TestCase):
             'zzz',
             'Filter continued after broken merge info'
         )
-        
+    def test_zero_length_commit(self):
+        env = self.env
+        env.add_file('bla', '')
+        env.commit('c1')
+
+        env.filter_repo( [ '/' ] )
+
+        self.assertEquals(
+            env.get_file_content_in_rev('bla', 1),
+            '',
+            'Empty files work'
+        )
+
 if __name__ == '__main__':
     unittest.main()
