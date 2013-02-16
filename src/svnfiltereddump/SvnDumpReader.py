@@ -109,5 +109,7 @@ class SvnDumpReader(object):
         if not lump.has_header('Text-content-length'):
             return
         size = int(lump.get_header('Text-content-length'))
-        md5sum = lump.get_header('Text-content-md5')
+        md5sum = None
+        if lump.has_header('Text-content-md5'):
+            md5sum = lump.get_header('Text-content-md5')
         lump.content = ContentTin(self.file_handle, size, md5sum)

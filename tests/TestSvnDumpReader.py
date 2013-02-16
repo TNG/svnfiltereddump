@@ -112,3 +112,34 @@ y
         lump.content.empty_to(out_fh)
         out_fh.seek(0)
         self.assertEqual(out_fh.read(), "y\n")
+
+    def test_read_add_node_without_md5sum(self):
+        # With some versions of Subversion an 'add' node for an empty
+        # file may come without MD5 sum.
+        fh = StringIO("""
+Node-path: bla
+Node-kind: file
+Node-action: add
+Prop-content-length: 10
+Text-content-length: 0
+Content-length: 10
+
+PROPS-END
+
+
+""")
+
+        reader = SvnDumpReader(fh)
+        lump = reader.read_lump()
+
+        self.assertEqual(lump.get_header_keys(), [
+            'Node-path', 'Node-kind', 'Node-action',
+            'Prop-content-length', 'Text-content-length',
+            'Content-length'
+        ])
+        self.assertEqual(lump.get_header('Node-kind'), 'file')
+        self.assertEqual(lump.get_header('Node-action'), 'add')
+        out_fh = StringIO()
+        lump.content.empty_to(out_fh)
+        out_fh.seek(0)
+        self.assertEqual(out_fh.read(), '')
