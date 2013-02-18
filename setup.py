@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='svnfiltereddump',
-    version='1.0beta4',
+    version='1.0',
     description='Extracts parts from Subversion repositories',
     author='Harald Wilhelmi',
     author_email='harald.wilhelmi@tngtech.com',
@@ -21,7 +21,7 @@ setup(
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Version Control",
     ],

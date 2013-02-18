@@ -40,6 +40,18 @@ in directory containing this README.
 CHANGE HISTORY
 --------------
 
+1.0:
+
+- Bug fix: GitHub #1 - Crash on missing Text-content-md5
+  svnfiltereddump will no longer crash if "svnadmin dump" will write
+  out a node with Text-Content and no MD5 checksum. This was observed
+  with Subversion 1.7.5 and empty files.
+- Bug fix: GitHub #2 - Dump fails on mergeinfo warning 0x0001
+  svnfiltereddump will no longer crash when "svnadmin dump" writes out
+  warnings like "WARNING 0x0001: Mergeinfo referencing revision(s) prior
+  to the oldest dumped revision (rXXX). Loading this dump may result in
+  invalid mergeinfo.".
+
 1.0beta4:
 
 - Bug fix: Node-action 'replace' not supported.
