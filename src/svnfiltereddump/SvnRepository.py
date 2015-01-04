@@ -95,7 +95,8 @@ class SvnRepository(object):
                         "Line read from 'svnlook pl -r %d %s %s' has no newline. Truncated?"
                         % ( rev, self.path, path )
                     )
-                property_list.append(line[2:-1])
+                if line[:2] == '  ':
+                    property_list.append(line[2:-1])
 
         properties = { }
         for property_name in property_list:

@@ -40,6 +40,10 @@ in directory containing this README.
 CHANGE HISTORY
 --------------
 
+1.1:
+
+- Updated to wokk with Subversion 1.8.
+
 1.0:
 
 - Bug fix: GitHub #1 - Crash on missing Text-content-md5

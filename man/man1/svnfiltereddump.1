@@ -210,12 +210,11 @@ test the tool as a whole on a high level.
 The Tool was developed with Python 2.6 in mind. It hopefully works with much
 newer versions, but certainly not with older ones and not with Python 3.X.
 .PP
-.B Tested with Subversion 1.6.17 and 1.7.0.
-The tool was tested with the version of Subversion, which were modern when
-it was written. It should work with no or minimal changes with most
-version of Subversion, where command \fBsvnadmin dump\fR produces dump
-format 2 (check the first lines of the dump output). However it is
-very sensitive to the errors and warnings produced by Subversion commands.
+.B Tested with Subversion 1.6.17, 1.7.0 and 1.8.10.
+The tool was tested varies versions of Subversion. Subversion 1.8 requires version 1.1.
+It should work with no or minimal changes with most version of Subversion, where
+command \fBsvnadmin dump\fR produces dump format 2 (check the first lines of the dump output).
+However it is very sensitive to the errors and warnings produced by Subversion commands.
 The respective checks may need some tweaking for some versions of
 Subversion. In doubt look at the code in src/svnfiltereddump/SvnRepository.py.
 .PP
