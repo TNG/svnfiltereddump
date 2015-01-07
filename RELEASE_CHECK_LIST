@@ -1,0 +1,19 @@
+
+CHECK LIST FOR NEW RELEASES
+===
+
+- Is the version number in setup.py up to date?
+- Is the change history in README up to date?
+- Is VERSION in src/svnfiltereddump/Config.py up to date?
+- Is everything committed?
+- Is everything pushed to github?
+
+    git push github
+
+- Is everything pushed to tng?
+
+    git push tng
+
+- Is it published in the Cheese Shop?
+
+    python setup.py sdist upload -r pypi
