@@ -49,7 +49,7 @@ Things get a little more complicated if the two modules share one trunk/tags/bra
 
 
 
-    last_rev=\`svnlook youngest /repos/old\`
+    last_rev=`svnlook youngest /repos/old`
     svnlook tree -r $last_rev --full-paths /repos/old | grep -E '^branches/[^/]+/module/[ab]/$' >list 
     svnlook tree -r $last_rev --full-paths /repos/old | grep -E '^tags/[^/]+/module/[ab]$' >>list 
     echo trunk/module/a >>list 
