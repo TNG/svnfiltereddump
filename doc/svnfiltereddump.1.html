@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+ "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<title>SVNFILTEREDDUMP man page</title>
+<meta name="generator" content="roffit">
+<STYLE type="text/css">
+pre {
+  overflow: auto;
+  margin: 0;
+}
+
+P.level0, pre.level0 {
+ padding-left: 2em;
+}
+
+P.level1, pre.level1 {
+ padding-left: 4em;
+}
+
+P.level2, pre.level2 {
+ padding-left: 6em;
+}
+
+span.emphasis {
+ font-style: italic;
+}
+
+span.bold {
+ font-weight: bold;
+}
+
+span.manpage {
+ font-weight: bold;
+}
+
+h2.nroffsh {
+ background-color: #e0e0e0;
+}
+
+span.nroffip {
+ font-weight: bold;
+ font-size: 120%;
+ font-family: monospace;
+}
+
+p.roffit {
+ text-align: center;
+ font-size: 80%;
+}
+</STYLE>
+</head><body>
+
+<p class="level0"><a name="NAME"></a><h2 class="nroffsh">NAME</h2>
+<p class="level0">svnfiltereddump - extracts parts from Subversion repositories <a name="SYNOPSIS"></a><h2 class="nroffsh">SYNOPSIS</h2>
+<p class="level0"><span Class="bold">svnfiltereddump [OPTIONS] SOURCE-REPO PATH ... \e</span> <br>&nbsp; | svnadmin load ... <br><span Class="bold">svnfiltereddump [OPTIONS] SOURCE-REPO --include-file FILE ... \e</span> <br>&nbsp; | svnadmin load ... <a name="DESCRIPTION"></a><h2 class="nroffsh">DESCRIPTION</h2>
+<p class="level0">
+<p class="level0">The svnfiltereddump tool is meant to extract portions of repositories of the Subversion source control system. It's output can be loaded with Subversion's <span Class="bold">svnadmin load</span> command into a new Subversion repository. The source repository must be given on the command line. A list of paths to extract may given on command line or in one or more input file(s). It is also possible to skip the revision history before a given starting revision. <a name="OPTIONS"></a><h2 class="nroffsh">OPTIONS</h2>
+<p class="level0">
+<p class="level0">
+<p class="level0"><span Class="bold">-h</span>, <span Class="bold">--help</span> Shows the usage and help text and exits. 
+<p class="level0"><span Class="bold">--include-file=FILE</span> Read paths to include from given file. 
+<p class="level0"><span Class="bold">--exclude=PATH</span> Exclude given path during filtering. 
+<p class="level0"><span Class="bold">--exclude-file=FILE</span> Read paths to exclude from given file. 
+<p class="level0"><span Class="bold">--keep-empty-revs</span> Copy revisions even if they have no effect on included paths at all. Without this option the command operates similar to svndumpfilter with the <span Class="bold">--drop-empty-revs</span> option. 
+<p class="level0"><span Class="bold">--start-rev=NUMBER</span> Squash the revision history below the given revision. Generate a artificial first revision with represents the given revision. If you use this option you should exclude tags and branches referring to the old revisions too. Otherwise your new repository may get huge because every tag or branch based on obsolete revisions will be included as full copy. Consider to use the <span Class="bold">--drop-old-tags-and-branches</span> option. 
+<p class="level0"><span Class="bold">--no-extra-mkdirs</span> By default the first revision dumped will include nodes to create the parent directories of the extracted directories. Most of the time this fine. However loading such a dump into a repository, which is not empty may fail because one of the directories exists already. If that happens use this flag to disable this feature. However with is option you are responsible to create all the needed parent directories in the target repository. 
+<p class="level0"><span Class="bold">--drop-old-tags-and-branches</span> Use this option with the --start-rev option. Automatically exclude all tags and branches, which are based on a revision older than the given start revision. Please note that tagging and branching in Subversion is done by convention. So this feature is just a heuristics, which may fail in a number of ways. The directories excluded are reported and should be checked carefully. 
+<p class="level0"><span Class="bold">--tag-or-branch-dir=NAME</span> Use this option with <span Class="bold">--drop-old-tags-and-branches</span>. By default directories called <span Class="bold">tags</span> and <span Class="bold">branches</span> are assumed to contain tags and branches. You may overwrite the list by giving one or more of this options. If at least one <span Class="bold">--tag-or-branch-dir</span> option is given you always start with an empty list. E.g if you just run with &acute;--tag-or-branch-dir=branches&acute; directories called &acute;tags&acute; are no longer considered by the <span Class="bold">--drop-old-tags-and-branches</span> option. 
+<p class="level0"><span Class="bold">--trunk-dir=NAME</span> Use this option with <span Class="bold">--drop-old-tags-and-branches</span>. By default it will be assumed that directories called trunk have no tags or branches below them - even if by chance some directory below them is called 'tags' or 'branches'. If you diverted from the convention and called your trunk directories differently you can supply your name(s) with <span Class="bold">--trunk-dir=NAME</span>. It works similar to the <span Class="bold">--tag-or-branch-dir=NAME</span> option. 
+<p class="level0"><span Class="bold">-q</span>, <span Class="bold">--quiet</span> Only report errors and warnings on console. 
+<p class="level0"><span Class="bold">-l FILE</span>, <span Class="bold">--log-file=FILE</span> Write messages to given log file. <a name="EXAMPLES"></a><h2 class="nroffsh">EXAMPLES</h2>
+<p class="level0">The most common use case is to extract some trees from an existing repository. Assume you have a repository at /repos/old. It contains two modules module/a and module/b - both with there own trunk/tags/branches structure - and you want to isolate this two modules in their own repository /repos/new. You can do this: 
+<p class="level0"><a name=""></a><span class="nroffip"></span> 
+<p class="level1">svnadmin create /repos/new <br>svnfiltereddump /repos/old module/a module/b e <br>&nbsp; | svnadmin load --ignore-uuid /repos/new 
+<p class="level1">Things get a little more complicated if the two modules share one trunk/tags/branches structure with some other modules. So we first need a list of tags/branches we are actually interested in: 
+<p class="level0"><a name=""></a><span class="nroffip"></span> 
+<p class="level1">last_rev=`svnlook youngest /repos/old` <br>svnlook tree -r $last_rev --full-paths /repos/old e <br>&nbsp; | grep -E '^branches/[^/]+/module/[ab]/$' &gt;list <br>svnlook tree -r $last_rev --full-paths /repos/old e <br>&nbsp; | grep -E '^tags/[^/]+/module/[ab]$' &gt;&gt;list <br>echo trunk/module/a &gt;&gt;list <br>echo trunk/module/b &gt;&gt;list 
+<p class="level1">Now we can use this list to get our target repository as above: 
+<p class="level0"><a name=""></a><span class="nroffip"></span> 
+<p class="level1">svnadmin create /repos/new <br>svnfiltereddump /repos/old --include-file list e <br>&nbsp; | svnadmin load --ignore-uuid /repos/new 
+<p class="level1">Now lets assume we want to get rid of ancient revision history before the revision 120232. When we can do this: 
+<p class="level0"><a name=""></a><span class="nroffip"></span> 
+<p class="level1">svnadmin create /repos/new <br>svnfiltereddump /repos/old --start-rev 120232 --drop-old-tags-and-branches / e <br>&nbsp; | svnadmin load --ignore-uuid /repos/new 
+<p class="level1">It's also possible to merge two repositories. This is easy if the paths are all different. If the paths you import from two repositories have a common prefix (e.g. trunk/...) things are more interesting. Assume we want to import the path common/prefix/somewhere/a from /repos/old_a and common/prefix/elsewhere/b from /repos/old_b to /repos/new. If we do it as above the <span Class="bold">svnadmin load</span> will fail because it tries to create the directory common which was already created by the first one. You may have found the option <span Class="bold">--no-extra-mkdirs</span> already. However if we just give this option, for the second repository we fail again - this time because nobody created common/prefix/elsewhere. So we have to do this manually like this: 
+<p class="level0"><a name=""></a><span class="nroffip"></span> 
+<p class="level1">svnadmin create /repos/new <br>svnfiltereddump /repos/old_a common/prefix/somewhere/a e <br>&nbsp; | svnadmin load --ignore-uuid /repos/new <br>svn mkdir -m 'merging repos' file:///repos/new/common/prefix/elsewhere <br>svnfiltereddump --no-extra-mkdirs /repos/old_b common/prefix/elsewhere/b e <br>&nbsp; | svnadmin load --ignore-uuid /repos/new <a name="MANUAL"></a><h2 class="nroffsh">MANUAL INSTALLATION INSTRUCTIONS</h2>
+<p class="level0">Sometimes you may have to bring this tool to a machine without root permissions or Internet access. In this case follow this check list: 
+<p class="level0"><span Class="bold">Prerequisite: You need a UNIX-like box.</span> 
+<p class="level0">Linux will work almost certainly. Other UNIX-like should work without or with minor adaption. Systems with backslashes in their path names or without IPC via pipes will never work. 
+<p class="level0"><span Class="bold">Prerequisite: Python 2.X, &gt;=2.6 must be installed.</span> 
+<p class="level0">In doubt run the tests. 
+<p class="level0"><span Class="bold">Prerequisite: Subversion must be installed</span> 
+<p class="level0">The commands svn, svnadmin, and svnlook mustbe included in the default search path ($PATH). Version 1.6.x and 1.7.x are believed to work. Again in doubt run the tests. Versions 1.6.17 and 1.7.0 were tested. 
+<p class="level0"><span Class="bold">Copy the source tree to the machine.</span> 
+<p class="level0"><span Class="bold">Set $PYTHONPATH</span> 
+<p class="level0">Point the environment variable PYTHONPATH to the <span Class="bold">src</span> directory. 
+<p class="level0"><span Class="bold">Set $PATH</span> 
+<p class="level0">Add the directory containing the <span Class="bold">svnfiltereddump</span> command (<span Class="bold">src/bin</span>) to the default search path. 
+<p class="level0"><span Class="bold">Install the man page</span> 
+<p class="level0">If you want to have this man page do a gzip on it and throw it into a suitable man directory (e.g. /usr/local/man/man1 or /usr/share/man/man1) or add the directory it lies in to your MANPATH environment variable. <a name="RUNNING"></a><h2 class="nroffsh">RUNNING THE TESTS</h2>
+<p class="level0">If you do anything funny run the automatic tests. To do this easily you need the nose package. One way to get nose is using <span Class="bold">pip</span> (<a href="http://pypi.python.org/pypi/pip">http://pypi.python.org/pypi/pip</a>). To run the tests just say <span Class="bold">nosetests</span> in the folder containing the various test folders (tests, functional_tests, integration_tests). You may pass folder or test case names to <span Class="bold">nosetests</span> to run just some of the tests. 
+<p class="level0">The <span Class="bold">tests</span> folder contains classic unit tests which run very fast. The tests in the <span Class="bold">integration_tests</span> folder focus of the interaction of the tool with your Subversion installation and the operating system. The tests in the <span Class="bold">functional_tests</span> folder test the tool as a whole on a high level. <a name="WARNINGS"></a><h2 class="nroffsh">WARNINGS AND LIMITATIONS</h2>
+<p class="level0">
+<p class="level0"><span Class="bold">Designed for Python 2.6+.</span> The Tool was developed with Python 2.6 in mind. It hopefully works with much newer versions, but certainly not with older ones and not with Python 3.X. 
+<p class="level0"><span Class="bold">Tested with Subversion 1.6.17, 1.7.0 and 1.8.10.</span> The tool was tested varies versions of Subversion. Subversion 1.8 requires version 1.1. It should work with no or minimal changes with most version of Subversion, where command <span Class="bold">svnadmin dump</span> produces dump format 2 (check the first lines of the dump output). However it is very sensitive to the errors and warnings produced by Subversion commands. The respective checks may need some tweaking for some versions of Subversion. In doubt look at the code in src/svnfiltereddump/SvnRepository.py. 
+<p class="level0"><span Class="bold">The option --drop-old-tags-and-branches uses just heuristics.</span> Multiple ways are known to confuse the tool when using this option. It is absolutely essential to verify the list of automatically excluded directories. 
+<p class="level0"><span Class="bold">There is no --renumber-revs option.</span> Early versions of this tool had a option <span Class="bold">--renumber-revs</span> like <span Class="bold">svndumpfilter</span> and <span Class="bold">svndumpfilter2</span>. The functional tests however showed that it is not of much use. Regardless how the <span Class="bold">svnfiltereddump</span> renumbered the revisions - <span Class="bold">svnadmin load</span> always assigned the revision numbers the same way. So this option was removed as useless. <a name="PERFORMANCE"></a><h2 class="nroffsh">PERFORMANCE CONSIDERATIONS</h2>
+<p class="level0">This tool is optimized to extract small portions from large repositories where only few revisions in the source repository are relevant for the target repository. It calls <span Class="bold">svnadmin dump</span> only for the revisions which are actually relevant for the output. So it may be much faster than e.g. svndumpfilter2 if only few revisions need to be dumped. On the other hand it may be slower than svndumpfilter2 if almost all revisions must be dumped - especially if the revisions only contain little data. 
+<p class="level0">The time complexity is expected to grow linear in the size of the revisions it has to scan and logarithmic in depth of the directory trees, which are configured to be included/excluded. 
+<p class="level0">Revision data is streamed over constant size buffers - typically just 1MB. The only structure that is expected to grow tracks the mapping of input to output revisions. So memory consumption should be very moderate and grow linear with the number of input revisions processed. <a name="REPORTING"></a><h2 class="nroffsh">REPORTING BUGS</h2>
+<p class="level0">Normally you will have to do the first analysis of any problem yourself (unless you are willing #1 to give other people shell access to your Subversion server over the Internet #2 to pay TNG Technology Consulting to do this work for you <span Class="bold">and</span> #3 someone at TNG has the time to do the job). Sorry for that. First check that source repository is fine. This can be done with <span Class="bold">svnadmin verify</span> command. If it is fine, go on with the path and revision you find in the error messages. Use 'svn log' and 'svn ls' to explore your source repository. Possibly use 'svnadmin dump --incremental' on the offending revision. Hopefully this be will sufficient to understand what went wrong. 
+<p class="level0">The preferred way to describe a bug is to write a functional test like the ones coming with the tool. If you are unable to do this, you may have to describe your problem as a sequence of svn commands to setup a minimal example repository plus your failing svnfiltereddump command. Please include the console output or log file produced by your run. If the problem is not obvious you may have to describe what is bad about the resulting dump. 
+<p class="level0">Add your operating system, Python version, Subversion version to the above data and send it to harald.wilhelmi@tngtech.com. <a name="HISTORY"></a><h2 class="nroffsh">HISTORY AND CREDITS</h2>
+<p class="level0">In 2011 the author had to reorganize a huge repository for a customer. This mostly meant splitting it in smaller parts and getting rid of old junk (someone had check-in huge amounts of static web content, which had been migrated to a CMS later). The tool svndumpfilter2 from Simon Tatham proved highly valuable. Actually all of the new repositories but the very last one were created with this tool. 
+<p class="level0">The last of the new repositories was so weired that the author hit all the limitations of svndumpfilter2. So he had to learn Python to remove them one by one. The result was almost a complete rewrite svndumpfilter2. When he was done he asked his customer for permission to publish this script - together with his thanks to Simon Tatham. However the customer denied this permission. 
+<p class="level0">The author was not willing to except this outcome. So he teamed up with some people from  his own company TNG Technology Consulting GmbH to write a new tool from scratch. svnfiltereddump started as an exercise in Python test driven development at TNG Technology Consulting in Munich, September 2011. The first release was finished by the author with some support of his colleagues in October of the same year. The initial release was create mostly the author's free time but sponsored by TNG Technology Consulting GmbH by allowing him to do some of the work during the regular training/education sessions at the company's site. 
+<p class="level0">Of cause this tool is designed to outperform svndumpfilter2 in almost every respect. However the author would like to point out that this tool would probable never have existed, if Simon Tatham had not decided to publish his tool. It was valuable source of inspiration and information. <a name="AUTHORS"></a><h2 class="nroffsh">AUTHORS</h2>
+<p class="level0">Written by Harald Wilhelmi with the friendly support of Thomas Fenzl and Bernd Stolle. <a name="COPYRIGHT"></a><h2 class="nroffsh">COPYRIGHT AND LICENSE</h2>
+<p class="level0">Copyright &copy; 2011 Harald Wilhelmi <br>License GPLv3+: GNU GPL version 3 or later &lt;<a href="http://gnu.org/licenses/gpl.html">http://gnu.org/licenses/gpl.html</a>&gt;. <br>This is free software: you are free to change and redistribute it. <br>There is NO WARRANTY, to the extent permitted by law. <a name="SOURCE"></a><h2 class="nroffsh">SOURCE</h2>
+<p class="level0">The official address to get this tool is https://github.com/TNG/svnfiltereddump. <a name="SEE"></a><h2 class="nroffsh">SEE ALSO</h2>
+<p class="level0">svn(1), svnadmin(1), <a href="http://svn.tartarus.org/sgt/svn-tools/svndumpfilter">http://svn.tartarus.org/sgt/svn-tools/svndumpfilter</a>2?view=markup <p class="roffit">
+ This HTML page was made with <a href="http://daniel.haxx.se/projects/roffit/">roffit</a>.
+</body></html>
