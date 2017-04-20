@@ -40,9 +40,13 @@ in directory containing this README.
 CHANGE HISTORY
 --------------
 
+1.2:
+
+- Just fixed version number - no functional change to version 1.1.
+
 1.1:
 
-- Updated to wokk with Subversion 1.8.
+- Updated to work with Subversion 1.8.
 
 1.0:
 
