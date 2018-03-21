@@ -80,7 +80,7 @@ def _get_file_as_list(name):
     list = [ ]
     fh = open(name, 'r')
     for line in fh:
-        if line[-1:] == "\n":
+        if line[-1:] == "\n" and len(line) > 1:
             line = line[:-1]
         list.append(line)
     return list
@@ -101,7 +101,6 @@ class Config(object):
             exclude_paths += _get_file_as_list(file)
         self.exclude_paths = exclude_paths
 
-        self.keep_empty_revs = options.keep_empty_revs
         self.start_rev = options.start_rev
         self.create_parent_dirs = options.create_parent_dirs
         self.quiet = options.quiet
