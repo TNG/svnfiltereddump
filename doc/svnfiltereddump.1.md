@@ -15,11 +15,11 @@ OPTIONS
 ===
 **-h, --help** Shows the usage and help text and exits.
 
-**--include-file=FILE** Read paths to include from given file.
+**--include-file=FILE** Read paths to include from given file. Empty lines will be ignores.
 
 **--exclude=PATH** Exclude given path during filtering.
 
-**--exclude-file=FILE** Read paths to exclude from given file.
+**--exclude-file=FILE** Read paths to exclude from given file. Empty lines will be ignores.
 
 **--keep-empty-revs** Copy revisions even if they have no effect on included paths at all. Without this option the command operates similar to svndumpfilter with the **--drop-empty-revs** option.
 
