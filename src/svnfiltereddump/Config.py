@@ -105,7 +105,6 @@ def _get_file_as_list(name):
 
 
 class Config(object):
-
     def __init__(self, command_line):
         (options, source_repository, include_paths) = _parse_command_line(command_line)
 
@@ -124,6 +123,7 @@ class Config(object):
         self.create_parent_dirs = options.create_parent_dirs
         self.quiet = options.quiet
         self.log_file = options.log_file
+        self.keep_empty_revs = options.keep_empty_revs
 
         self.drop_old_tags_and_branches = options.drop_old_tags_and_branches
 
