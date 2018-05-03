@@ -10,7 +10,7 @@ setup(
     author_email='harald.wilhelmi@tngtech.com',
     url='https://github.com/tng/svnfiltereddump',
     packages=['svnfiltereddump'],
-    package_dir = { '': 'src' },
+    package_dir={'': 'src'},
     long_description="""\
         The svnfiltereddump tool allows to extract parts of Subversion
         repositories. It is a bit like svndumpfilter or svndumpfilter2.
@@ -27,5 +27,5 @@ setup(
     ],
     keywords='subversion',
     license='GPL',
-    scripts = [ 'src/bin/svnfiltereddump' ]
+    scripts=['src/bin/svnfiltereddump']
 )
