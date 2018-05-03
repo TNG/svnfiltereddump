@@ -119,7 +119,7 @@ WARNINGS AND LIMITATIONS
 
 Designed for Python 2.6+. The Tool was developed with Python 2.6 in mind. It hopefully works with much newer versions, but certainly not with older ones and not with Python 3.X.
 
-Tested with Subversion 1.6.17, 1.7.0 and 1.8.10. The tool was tested varies versions of Subversion. Subversion 1.8 requires version 1.1. It should work with no or minimal changes with most version of Subversion, where command `svnadmin dump` produces dump format 2 (check the first lines of the dump output). However it is very sensitive to the errors and warnings produced by Subversion commands. The respective checks may need some tweaking for some versions of Subversion. In doubt look at the code in src/svnfiltereddump/SvnRepository.py.
+Tested with Subversion 1.6.17, 1.7.0, 1.8.10, and 1.10.0. The tool was tested varies versions of Subversion. Subversion 1.8 requires version 1.1. It should work with no or minimal changes with most version of Subversion, where command `svnadmin dump` produces dump format 2 (check the first lines of the dump output). However it is very sensitive to the errors and warnings produced by Subversion commands. The respective checks may need some tweaking for some versions of Subversion. In doubt look at the code in src/svnfiltereddump/SvnRepository.py.
 
 The option **--drop-old-tags-and-branches** uses just heuristics. Multiple ways are known to confuse the tool when using this option. It is absolutely essential to verify the list of automatically excluded directories.
 
