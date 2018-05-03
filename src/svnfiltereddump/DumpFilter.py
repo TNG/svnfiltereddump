@@ -1,13 +1,13 @@
-
-from logging import info
 from SvnDumpReader import SvnDumpReader
-from LumpBuilder import LumpBuilder
+
 
 class UnsupportedDumpVersionException(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
+
 
 class DumpFilter(object):
     def __init__(self, config, source_repository, interesting_paths, lump_builder):
@@ -27,7 +27,7 @@ class DumpFilter(object):
         while True:
             lump = self.dump_reader.read_lump()
             if lump is None:
-                break;
+                break
             self._process_lump(lump) 
 
         self.dump_reader = None
@@ -42,13 +42,14 @@ class DumpFilter(object):
         self.revision_number = int(lump.get_header('Revision-number'))
         self.lump_builder.pass_lump(lump)
 
-    def _validate_dump_header_lump(self, lump):
+    @staticmethod
+    def _validate_dump_header_lump(lump):
         if lump.has_header('SVN-fs-dump-format-version'):
             dump_format_version = lump.get_header('SVN-fs-dump-format-version')
             if dump_format_version != '2':
                 raise UnsupportedDumpVersionException(
                     'Detected unsupported SVN version - SVN-fs-dump-format-version was %s (wanted: 2)'
-                    % ( dump_format_version )
+                    % dump_format_version
                 )
 
     def _process_lump(self, lump):
@@ -60,7 +61,7 @@ class DumpFilter(object):
         elif action == 'change':
             self._process_change_lump(lump)
         else:
-            raise Exception("Unknown Node-action '%s'!" % ( action ) )
+            raise Exception("Unknown Node-action '%s'!" % action)
 
     def _process_add_or_replace_lump(self, lump, action):
         path = lump.get_header('Node-path')
@@ -95,7 +96,7 @@ class DumpFilter(object):
                 self.lump_builder.change_lump_from_add_or_replace_lump(lump)
 
     def _is_internal_copy(self, from_path, from_rev):
-        if self.config.start_rev and from_rev <  self.config.start_rev:
+        if self.config.start_rev and from_rev < self.config.start_rev:
             return False
         return self.interesting_paths.is_interesting(from_path)
 
@@ -132,5 +133,3 @@ class DumpFilter(object):
         path = lump.get_header('Node-path')
         if self.interesting_paths.is_interesting(path):
             self.lump_builder.pass_lump(lump)
-
-

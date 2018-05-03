@@ -1,16 +1,16 @@
-
 from unittest import TestCase
 from StringIO import StringIO
 from svnfiltereddump import SvnDumpWriter
 from svnfiltereddump import SvnLump
 from svnfiltereddump import ContentTin
 
+
 class SvnDumpWriterTests(TestCase):
 
     def setUp(self):
         self.output = StringIO()
-        self.writer =  SvnDumpWriter(
-            file_handle = self.output
+        self.writer = SvnDumpWriter(
+            file_handle=self.output
         )
 
     def test_simple(self):
@@ -25,7 +25,7 @@ class SvnDumpWriterTests(TestCase):
 header2: value2
 
 """
-        )
+                         )
 
     def test_properties_only(self):
         lump = SvnLump()
@@ -53,7 +53,7 @@ abc
 PROPS-END
 
 """
-        )
+                         )
 
     def test_text_only(self):
         lump = SvnLump()
@@ -66,7 +66,7 @@ PROPS-END
         lump.set_header('Content-length', 2)
         content_fh = StringIO("y\n")
         lump.content = ContentTin(content_fh, 2, '009520053b00386d1173f3988c55d192')
-        
+
         self.writer.write_lump(lump)
 
         self.output.seek(0)
@@ -82,7 +82,7 @@ y
 
 
 """
-        )
+                         )
 
     def test_text_and_properties(self):
         lump = SvnLump()
@@ -112,4 +112,4 @@ fgasdfgsd
 
 
 """
-        )
+                         )

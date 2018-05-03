@@ -1,8 +1,8 @@
-
 from re import match
 from SvnLump import SvnLump
 from ContentTin import ContentTin
 from string import join
+
 
 class SvnDumpReader(object):
 
@@ -53,17 +53,17 @@ class SvnDumpReader(object):
         actual_length = 0
 
         while True:
-            ( key, key_length ) = self._read_prop_key_and_length()
+            key, key_length = self._read_prop_key_and_length()
             actual_length += key_length
             if key is None:
-                break;
-            ( value, value_length ) = self._read_prop_value_and_length()
+                break
+            value, value_length = self._read_prop_value_and_length()
             actual_length += value_length
             lump.properties[key] = value
         if actual_length != expected_length:
             raise Exception(
                 "PROPS section should be %d bytes long but was %d!"
-                % ( expected_length, actual_length )
+                % (expected_length, actual_length)
             )
 
     def _read_prop_key_and_length(self):
@@ -71,13 +71,13 @@ class SvnDumpReader(object):
         line = fh.readline()
         length = len(line)
         if line == 'PROPS-END\n':
-            return ( None, length )
+            return None, length
         if not line.startswith('K '):
             raise Exception("Needed key size line (K <number>) but got:\n" + line)
         size = int(line[2:-1])
-        ( key, key_length ) = self._read_field_of_given_size_and_length(size)
+        key, key_length = self._read_field_of_given_size_and_length(size)
         length += key_length
-        return ( key, length )
+        return key, length
         
     def _read_prop_value_and_length(self):
         fh = self.file_handle
@@ -86,12 +86,12 @@ class SvnDumpReader(object):
         if not line.startswith('V '):
             raise Exception("Needed value size line (V <number>) but got:\n" + line)
         size = int(line[2:-1])
-        ( value, value_length ) = self._read_field_of_given_size_and_length(size)
+        value, value_length = self._read_field_of_given_size_and_length(size)
         length += value_length
-        return ( value, length )
+        return value, length
 
     def _read_field_of_given_size_and_length(self, size):
-        lines = [ ]
+        lines = []
         length = 0
         while True:
             line = self.file_handle.readline()
@@ -100,7 +100,7 @@ class SvnDumpReader(object):
             lines.append(line)
             length += len(line)
             if length == size+1:
-                return ( join(lines, '')[0:-1], length )
+                return join(lines, '')[0:-1], length
             elif length > size+1:
                 raise Exception("Field length did not match expected size!")
 

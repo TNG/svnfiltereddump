@@ -1,4 +1,3 @@
-
 from unittest import TestCase
 
 from LumpBuilderMock import LumpBuilderMock
@@ -16,4 +15,4 @@ class TestRevisionIgnorer(TestCase):
         self.ignorer.process_revision(3, None)
 
         self.assertEqual(len(self.builder.call_history), 1)
-        self.assertEqual(self.builder.call_history, [ [ 'revision_header', 3, 'None' ] ])
+        self.assertEqual(self.builder.call_history, [['revision_header', 3, 'None']])

@@ -1,8 +1,6 @@
-
 from unittest import TestCase
 from StringIO import StringIO
 from svnfiltereddump import ContentTin
-
 
 
 class ContentTinTests(TestCase):
@@ -31,12 +29,11 @@ class ContentTinTests(TestCase):
         tin = ContentTin(self.fh, 3, 'MD5SUM')
         tin.discard()
         self.assertEqual(self.fh.read(), 'zzz')
-  
+
     def test_discard_tin(self):
-        with ContentTin(self.fh, 3, 'MD5SUM') as ct:
+        with ContentTin(self.fh, 3, 'MD5SUM'):
             pass
         self.assertEqual(self.fh.tell(), 3)
-
 
     def test_throws_on_overrun(self):
         fh = StringIO("")

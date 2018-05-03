@@ -73,7 +73,6 @@ class CheckedCommandFileHandle(object):
         if error[-1:] == "\n":
             error = error[:-1]
         error_lines = error.split("\n")
-        line_ok = False
         for line in error_lines:
             line_ok = False
             for pattern in self.ignore_patterns:
@@ -83,8 +82,8 @@ class CheckedCommandFileHandle(object):
             if not line_ok:
                 self.error_fh.write("FAILED LINE: '"+line+"'\n")
                 cmd = join(self.args, ' ')
-                self.error_fh.write("Output of command '%s' on STDERR:\n%s\n" % ( cmd, error ) )
-                raise Exception("Command '%s' wrote to STDERR (see above)!" % ( cmd ))
+                self.error_fh.write("Output of command '%s' on STDERR:\n%s\n" % (cmd, error))
+                raise Exception("Command '%s' wrote to STDERR (see above)!" % cmd)
 
     def close(self):
         p = self.process
@@ -96,6 +95,5 @@ class CheckedCommandFileHandle(object):
         if status:
             raise Exception(
                 "Command '%s' exited with status %d"
-                % ( join(self.args), status )
+                % (join(self.args), status)
             )
-

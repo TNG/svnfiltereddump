@@ -1,5 +1,6 @@
-
 from DumpController import DUMP_HEADER_PSEUDO_REV
+
+
 class DumpHeaderGenerator(object):
     def __init__(self, lump_builder):
         self.lump_builder = lump_builder

@@ -1,5 +1,5 @@
-
 from logging import info
+
 
 class LumpPostProcessor(object):
     def __init__(self, config, revision_mapper, writer):
@@ -35,7 +35,7 @@ class LumpPostProcessor(object):
     def _discard_deplayed_revision_header(self):
         if not self.delayed_revision_header:
             return
-        info('Dropping empty revision.');
+        info('Dropping empty revision.')
         if self.last_revision_passed:
             mapper = self.revision_mapper
             input_rev = int(self.delayed_revision_header.get_header('Revision-number'))
@@ -75,7 +75,8 @@ class LumpPostProcessor(object):
         elif lump.has_header('Content-length'):
             lump.delete_header('Content-length')
 
-    def _calculate_prop_content_length(self, lump):
+    @staticmethod
+    def _calculate_prop_content_length(lump):
         if not lump.properties:
             return 0
         sum_so_far = 0

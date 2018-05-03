@@ -1,5 +1,4 @@
 
-from logging import info
 
 class SvnDumpWriter(object):
     def __init__(self, file_handle):
@@ -18,7 +17,7 @@ class SvnDumpWriter(object):
             header_value = lump.get_header(header_name)
             fh.write(
                 "%s: %s\n"
-                % ( header_name, header_value )
+                % (header_name, header_value)
             )
         fh.write("\n") 
 
@@ -30,7 +29,7 @@ class SvnDumpWriter(object):
             value = lump.properties[key]
             fh.write(
                 "K %d\n%s\nV %d\n%s\n"
-                % ( len(key), key, len(value), value )
+                % (len(key), key, len(value), value)
             )
         fh.write("PROPS-END\n")
         return True

@@ -1,6 +1,7 @@
 
 from string import join
 
+
 class ParentDirectoryLumpGenerator(object):
 
     def __init__(self, interesting_paths, lump_builder):

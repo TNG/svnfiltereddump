@@ -1,8 +1,8 @@
-
 from unittest import TestCase
 from svnfiltereddump import ParentDirectoryLumpGenerator, InterestingPaths
 
 from LumpBuilderMock import LumpBuilderMock
+
 
 class TestParentDirectoryLumpGenerator(TestCase):
     def setUp(self):
@@ -12,17 +12,17 @@ class TestParentDirectoryLumpGenerator(TestCase):
 
     def test_empty(self):
         self.generator.write_lumps()
-        self.assertEqual(self.builder.call_history, [ ])
+        self.assertEqual(self.builder.call_history, [])
 
     def test_trivial(self):
         self.interesting_paths.mark_path_as_interesting('a')
         self.generator.write_lumps()
-        self.assertEqual(self.builder.call_history, [ ])
+        self.assertEqual(self.builder.call_history, [])
 
     def test_all_intersting(self):
         self.interesting_paths.mark_path_as_interesting('')
         self.generator.write_lumps()
-        self.assertEqual(self.builder.call_history, [ ])
+        self.assertEqual(self.builder.call_history, [])
 
     def test_simple(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
@@ -30,7 +30,7 @@ class TestParentDirectoryLumpGenerator(TestCase):
         self.generator.write_lumps()
 
         self.assertEqual(self.builder.call_history, [
-            [ 'mkdir', 'a' ]
+            ['mkdir', 'a']
         ])
 
     def test_complex(self):
@@ -44,8 +44,8 @@ class TestParentDirectoryLumpGenerator(TestCase):
         self.generator.write_lumps()
 
         self.assertEqual(self.builder.call_history, [
-            [ 'mkdir', 'b' ],
-            [ 'mkdir', 'd' ],
-            [ 'mkdir', 'b/x' ],
-            [ 'mkdir', 'b/x/y' ],
+            ['mkdir', 'b'],
+            ['mkdir', 'd'],
+            ['mkdir', 'b/x'],
+            ['mkdir', 'b/x/y'],
         ])

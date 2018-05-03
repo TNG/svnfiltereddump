@@ -6,7 +6,8 @@ from os.path import basename
 from string import join
 import logging
 
-from DumpController import DumpController, STRATEGY_DUMP_HEADER, STRATEGY_IGNORE, STRATEGY_SYNTHETIC_DELETES, STRATEGY_DUMP_SCAN, STRATEGY_BOOTSTRAP, DUMP_HEADER_PSEUDO_REV
+from DumpController import DumpController, STRATEGY_DUMP_HEADER, STRATEGY_IGNORE, STRATEGY_SYNTHETIC_DELETES,\
+    STRATEGY_DUMP_SCAN, STRATEGY_BOOTSTRAP
 
 from DumpHeaderGenerator import DumpHeaderGenerator
 from BootsTrapper import BootsTrapper
@@ -27,15 +28,17 @@ from RevisionMapper import RevisionMapper
 
 console_handler = None
 
+
 def _setup_interesting_paths(config):
     interesting_paths = InterestingPaths()
     for path in config.include_paths:
-        logging.info("Including path '%s'" % (path) )
+        logging.info("Including path '%s'" % path)
         interesting_paths.mark_path_as_interesting(path)
     for path in config.exclude_paths:
-        logging.info("EXCLUDING path '%s'" % (path) )
+        logging.info("EXCLUDING path '%s'" % path)
         interesting_paths.mark_path_as_boring(path)
     return interesting_paths
+
 
 def _setup_early_logging():
     global console_handler
@@ -61,6 +64,7 @@ def _setup_final_logging(config):
         log_file_handler.setFormatter(log_file_formatter)
         logger = logging.getLogger()
         logger.addHandler(log_file_handler)
+
 
 def run():
     _setup_early_logging()
@@ -90,10 +94,10 @@ def run():
         }
 
         controller = DumpController(
-            config = config,
-            repository = source_repository,
-            interesting_paths = interesting_paths,
-            revision_handlers_by_strategy = revision_handlers_hash
+            config=config,
+            repository=source_repository,
+            interesting_paths=interesting_paths,
+            revision_handlers_by_strategy=revision_handlers_hash
         )
 
         controller.run()

@@ -1,7 +1,7 @@
-
 from unittest import TestCase
 
 from svnfiltereddump import RevisionMapper
+
 
 class ConfigMock(object):
 
@@ -38,4 +38,3 @@ class RevisionMapperTest(TestCase):
         self.assertEqual(mapper.get_output_rev_for_input_rev(1), 17)
         self.assertEqual(mapper.get_output_rev_for_input_rev(16), 17)
         self.assertRaises(Exception, mapper.get_output_rev_for_input_rev, 20)
-

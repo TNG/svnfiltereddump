@@ -2,13 +2,13 @@
 class SvnLump:
 
     def __init__(self):
-        self.headers = { }
-        self.header_order = [ ]
-        self.properties = { }
+        self.headers = {}
+        self.header_order = []
+        self.properties = {}
         self.content = None
 
     def set_header(self, key, value):
-        if not self.headers.has_key(key):
+        if key not in self.headers:
             self.header_order.append(key)
         self.headers[key] = value
 
@@ -16,7 +16,7 @@ class SvnLump:
         return self.headers[key]
 
     def has_header(self, key):
-        return self.headers.has_key(key)
+        return key in self.headers
 
     def delete_header(self, key):
         del self.headers[key]

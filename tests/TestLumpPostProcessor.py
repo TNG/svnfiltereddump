@@ -1,4 +1,3 @@
-
 from unittest import TestCase
 from StringIO import StringIO
 
@@ -6,18 +5,21 @@ from svnfiltereddump import Config, LumpPostProcessor, ContentTin, SvnLump, Revi
 
 from DumpWriterMock import DumpWriterMock
 
+
 class ParentDirectoryGeneratorMock(object):
     def __init__(self, writer):
         self.writer = writer
+
     def write_lumps(self):
-        for marker in [ '1of2', '2of2' ]:
+        for marker in ['1of2', '2of2']:
             lump = SvnLump()
             lump.set_header('ParentDirectoryGeneratorMockLump', marker)
             self.writer.write_lump(lump)
 
+
 class TestLumpPostProcessor(TestCase):
     def setUp(self):
-        self.config = Config( [ '--no-extra-mkdirs', '/dummy' ] )
+        self.config = Config(['--no-extra-mkdirs', '/dummy'])
         self.writer = DumpWriterMock(self)
         self.revision_mapper = RevisionMapper(self.config)
         self.processor = LumpPostProcessor(self.config, self.revision_mapper, self.writer)
@@ -59,7 +61,7 @@ class TestLumpPostProcessor(TestCase):
         self.assertEqual(len(self.writer.lumps), 2)
         self.assertEqual(self.writer.lumps[0].get_header('Revision-number'), '13')
         self.assertEqual(self.writer.lumps[1].get_header('Node-kind'), 'file')
-   
+
     def test_map_dropped_revs(self):
         lump = SvnLump()
         lump.set_header('Revision-number', '12')
@@ -83,7 +85,6 @@ class TestLumpPostProcessor(TestCase):
         lump.set_header('Node-copyfrom-rev', '13')
         self.processor.write_lump(lump)
 
-
         self.assertEqual(len(self.writer.lumps), 4)
         self.assertEqual(self.writer.lumps[2].get_header('Revision-number'), '14')
         self.assertEqual(self.writer.lumps[3].get_header('Node-copyfrom-rev'), '12')
@@ -104,7 +105,7 @@ class TestLumpPostProcessor(TestCase):
     def test_fix_content_length_prop_no_old(self):
         lump = SvnLump()
         lump.set_header('Node-kind', 'file')
-        lump.properties = { 'blub': 'XXX' }
+        lump.properties = {'blub': 'XXX'}
 
         self.processor.write_lump(lump)
 
@@ -117,7 +118,7 @@ class TestLumpPostProcessor(TestCase):
         lump.set_header('Node-kind', 'file')
         lump.set_header('Prop-content-length', '26')
         lump.set_header('Content-length', '26')
-        lump.properties = { 'blub': 'XXX' }
+        lump.properties = {'blub': 'XXX'}
 
         self.processor.write_lump(lump)
 
@@ -129,7 +130,7 @@ class TestLumpPostProcessor(TestCase):
         lump = SvnLump()
         lump.set_header('Node-kind', 'file')
         lump.set_header('Text-content-length', '3')
-        lump.properties = { 'blub': 'XXX' }
+        lump.properties = {'blub': 'XXX'}
         fh = StringIO('bla')
         lump.content = ContentTin(fh, 3, 'FAKE-MD5SUM')
 

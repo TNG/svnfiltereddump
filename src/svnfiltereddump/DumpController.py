@@ -9,6 +9,7 @@ STRATEGY_BOOTSTRAP = 'BOOTSTRAP'
 
 DUMP_HEADER_PSEUDO_REV = -1
 
+
 class DumpController(object):
     def __init__(self, config, repository, interesting_paths, revision_handlers_by_strategy):
         self.config = config
@@ -18,9 +19,9 @@ class DumpController(object):
 
     def _get_strategy_and_aux_data_for_revision(self, rev):
         if rev == DUMP_HEADER_PSEUDO_REV:
-            return ( STRATEGY_DUMP_HEADER, None )
+            return STRATEGY_DUMP_HEADER, None
         if rev == self.config.start_rev:
-            return ( STRATEGY_BOOTSTRAP, None )
+            return STRATEGY_BOOTSTRAP, None
 
         changes_by_type = self.repository.get_changed_paths_by_change_type_for_revision(rev)
 
@@ -29,21 +30,21 @@ class DumpController(object):
                 continue
             for path in changes_by_type[change_type]:
                 if self.interesting_paths.is_interesting(path):
-                    return ( STRATEGY_DUMP_SCAN, None )
+                    return STRATEGY_DUMP_SCAN, None
                 if change_type == 'A':
                     if self.interesting_paths.get_interesting_sub_directories(path):
-                        return ( STRATEGY_DUMP_SCAN, None )
+                        return STRATEGY_DUMP_SCAN, None
 
-        if not changes_by_type.has_key('D'):
-            return ( STRATEGY_IGNORE, None )
+        if 'D' not in changes_by_type:
+            return STRATEGY_IGNORE, None
 
-        delete_paths = [ ]
+        delete_paths = []
         for path in changes_by_type['D']:
             delete_paths += self.interesting_paths.get_interesting_sub_directories(path)
         if delete_paths:
-            return ( STRATEGY_SYNTHETIC_DELETES, delete_paths )
+            return STRATEGY_SYNTHETIC_DELETES, delete_paths
        
-        return ( STRATEGY_IGNORE, None )
+        return STRATEGY_IGNORE, None
 
     def run(self):
         header_handler = self.revision_handlers_by_strategy[STRATEGY_DUMP_HEADER]
@@ -55,7 +56,7 @@ class DumpController(object):
         last_revision = self.repository.get_youngest_revision()
 
         for revision in xrange(first_revision, last_revision+1):
-            ( strategy, aux_data ) = self._get_strategy_and_aux_data_for_revision(revision)
-            info("Processing input revsion %d using strategy %s ..." % ( revision, strategy ) )
+            strategy, aux_data = self._get_strategy_and_aux_data_for_revision(revision)
+            info("Processing input revsion %d using strategy %s ..." % (revision, strategy))
             handler = self.revision_handlers_by_strategy[strategy]
             handler.process_revision(revision, aux_data) 

@@ -1,7 +1,7 @@
-
 from unittest import TestCase
 
 from svnfiltereddump import SvnLump
+
 
 class SvnLumpTests(TestCase):
 
@@ -16,7 +16,7 @@ class SvnLumpTests(TestCase):
         lump.properties['prop_a'] = 'blub'
         lump.content = 'Something'
 
-        self.assertEqual(lump.get_header_keys(), [ 'a_hdr', 'c_hdr', 'd_hdr' ])
+        self.assertEqual(lump.get_header_keys(), ['a_hdr', 'c_hdr', 'd_hdr'])
         self.assertEqual(lump.get_header('a_hdr'), 'y')
         self.assertEqual(lump.get_header('c_hdr'), 'z')
         self.assertEqual(lump.get_header('d_hdr'), 'x')

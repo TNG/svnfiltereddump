@@ -1,10 +1,8 @@
-
 from os.path import normpath
 from copy import copy
 from logging import info
 
 from SvnLump import SvnLump
-from SvnRepository import SvnRepository
 
 
 class LumpBuilder(object):
@@ -29,9 +27,9 @@ class LumpBuilder(object):
 
     def get_node_from_source(self, kind, path, action, from_path, from_rev):
         assert kind == 'file' or kind == 'dir'
-        assert action == 'add' or action =='replace'
+        assert action == 'add' or action == 'replace'
 
-        if self._is_obsolete_tag_or_branch_copy(path, from_rev):
+        if self._is_obsolete_tag_or_branch_copy(path):
             self._handle_obsolete_tag_or_branch(path)
             return
 
@@ -52,7 +50,7 @@ class LumpBuilder(object):
         lump.properties = repo.get_properties_of_path(from_path, from_rev)
         self.dump_writer.write_lump(lump)
 
-    def _is_obsolete_tag_or_branch_copy(self, path, from_rev):
+    def _is_obsolete_tag_or_branch_copy(self, path):
         if not self.config.start_rev:
             return False
         if not self.config.drop_old_tags_and_branches:
@@ -64,8 +62,8 @@ class LumpBuilder(object):
         self.interesting_paths.mark_path_as_boring(path)
 
     def get_path_from_target(self, kind, path, action, from_path, from_rev):
-        assert kind == 'file' or kind =='dir'
-        assert action == 'add' or action =='replace'
+        assert kind == 'file' or kind == 'dir'
+        assert action == 'add' or action == 'replace'
 
         lump = SvnLump()
         lump.set_header('Node-path', path)
@@ -114,10 +112,10 @@ class LumpBuilder(object):
         self.dump_writer.write_lump(lump)
 
     def get_recursively_from_source(self, kind, path, action, from_path, from_rev):
-        assert kind == 'file' or kind =='dir'
-        assert action == 'add' or action =='replace'
+        assert kind == 'file' or kind == 'dir'
+        assert action == 'add' or action == 'replace'
 
-        if self._is_obsolete_tag_or_branch_copy(path, from_rev):
+        if self._is_obsolete_tag_or_branch_copy(path):
             self._handle_obsolete_tag_or_branch(path)
             return
         if kind == 'file':
@@ -128,7 +126,7 @@ class LumpBuilder(object):
             self._add_tree_from_source(path, from_path, from_rev)
 
     def _add_tree_from_source(self, path, from_path, from_rev):
-        if path[-1:] != '/' and len(path)>0:
+        if path[-1:] != '/' and len(path) > 0:
             path += '/'
         if from_path[-1:] != '/':
             from_path += '/'

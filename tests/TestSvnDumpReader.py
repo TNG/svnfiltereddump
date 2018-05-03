@@ -1,8 +1,7 @@
-
-
 from unittest import TestCase
 from StringIO import StringIO
 from svnfiltereddump import SvnDumpReader
+
 
 class SvnDumpReaderTests(TestCase):
 
@@ -107,7 +106,7 @@ y
             'Content-length'
         ])
         self.assertEqual(lump.get_header('Node-kind'), 'file')
-        self.assertEqual(lump.properties.keys(), [ ] )
+        self.assertEqual(lump.properties.keys(), [])
         out_fh = StringIO()
         lump.content.empty_to(out_fh)
         out_fh.seek(0)

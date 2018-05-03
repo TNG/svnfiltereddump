@@ -15,9 +15,11 @@
 # piece of 'content' we create a ContentTin with it.
 #
 
+
 class NonOut(object):
     def write(self, what):
         pass
+
 
 class ContentTin:
 
@@ -38,7 +40,7 @@ class ContentTin:
             self.empty_to()
         return False
    
-    def empty_to(self, out_fh = NonOut()):
+    def empty_to(self, out_fh=NonOut()):
         if self.used:
             raise Exception("ContentTins can only be used once")
         while self.remaining_bytes > 0:

@@ -1,10 +1,10 @@
-
 from copy import copy
 from StringIO import StringIO
 
+
 class DumpWriterMock(object):
     def __init__(self, test_case):
-        self.lumps = [ ]
+        self.lumps = []
         self.test_case = test_case
 
     def write_lump(self, lump):

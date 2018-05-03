@@ -284,15 +284,15 @@ ghi
 
 class TestDumpFilter(TestCase):
     def setUp(self):
-        self.config = Config([ '/dummy' ])
+        self.config = Config(['/dummy'])
         self.interesting_paths = InterestingPaths()
         self.repo = RepositoryMock()
         self.builder = LumpBuilderMock()
         self.dump_filter = DumpFilter(
-            config = self.config,
-            source_repository = self.repo,
-            interesting_paths = self.interesting_paths,
-            lump_builder = self.builder
+            config=self.config,
+            source_repository=self.repo,
+            interesting_paths=self.interesting_paths,
+            lump_builder=self.builder
         )
 
     def test_dump_empty(self):
@@ -314,12 +314,12 @@ class TestDumpFilter(TestCase):
 
         self._verfiy_revision_header()
 
-        self.assertEqual(self.builder.call_history[1][0], 'pass_lump' )
+        self.assertEqual(self.builder.call_history[1][0], 'pass_lump')
         lump = self.builder.call_history[1][1]
         self.assertEqual(
             lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
-            'Text-content-md5', 'Text-content-sha1', 'Content-length' ]
+            ['Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
+             'Text-content-md5', 'Text-content-sha1', 'Content-length']
         )
         self.assertEqual(lump.get_header('Node-path'), 'a/b')
         self.assertEqual(lump.get_header('Node-kind'), 'file')
@@ -336,135 +336,135 @@ class TestDumpFilter(TestCase):
         self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
 
-        self.assertEqual(self.builder.call_history[1][0], 'pass_lump' )
+        self.assertEqual(self.builder.call_history[1][0], 'pass_lump')
         lump = self.builder.call_history[1][1]
         self.assertEqual(
             lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action', 'Node-copyfrom-rev',
-            'Node-copyfrom-path', 'Text-copy-source-md5', 'Text-copy-source-sha1' ]
+            ['Node-path', 'Node-kind', 'Node-action', 'Node-copyfrom-rev',
+             'Node-copyfrom-path', 'Text-copy-source-md5', 'Text-copy-source-sha1']
         )
-        self.assertEqual(lump.properties, { })
+        self.assertEqual(lump.properties, {})
         self.assertEqual(lump.content, None)
 
     def test_copy_in(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B
-        self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
-        self.repo.properties_by_path_and_revision['x/y'] = { 2: { } }
+        self.repo.files_by_name_and_revision['x/y'] = {2: "xxx\n\yyy\n"}
+        self.repo.properties_by_path_and_revision['x/y'] = {2: {}}
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            [ 'get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2 ]
-        )
+                         ['get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2]
+                         )
 
     def test_copy_in_start_rev(self):
         self.config.start_rev = 3
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.interesting_paths.mark_path_as_interesting('x/y')
         self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B
-        self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
-        self.repo.properties_by_path_and_revision['x/y'] = { 2: { } }
+        self.repo.files_by_name_and_revision['x/y'] = {2: "xxx\n\yyy\n"}
+        self.repo.properties_by_path_and_revision['x/y'] = {2: {}}
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            [ 'get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2 ]
-        )
+                         ['get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2]
+                         )
 
     def test_copy_in_with_change(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_COPY_FILE_X_Y_TO_A_B_WITH_CHANGE
-        self.repo.files_by_name_and_revision['x/y'] = { 2: "xxx\n\yyy\n" }
-        self.repo.properties_by_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
+        self.repo.files_by_name_and_revision['x/y'] = {2: "xxx\n\yyy\n"}
+        self.repo.properties_by_path_and_revision['x/y'] = {2: {'prop1': 'value1'}}
 
         self.dump_filter.process_revision(3, None)
 
         self.assertEqual(len(self.builder.call_history), 3)
         self._verfiy_revision_header()
-        self.assertEqual(self.builder.call_history[1], 
-            [ 'get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2 ]
-        )
+        self.assertEqual(self.builder.call_history[1],
+                         ['get_recursively_from_source', 'file', 'a/b', 'add', 'x/y', 2]
+                         )
 
         self.assertEqual(self.builder.call_history[2][0], 'change_lump_from_add_or_replace_lump')
         lump = self.builder.call_history[2][1]
         self.assertEqual(
             lump.get_header_keys(),
             ['Node-path', 'Node-kind', 'Node-action', 'Node-copyfrom-rev', 'Node-copyfrom-path',
-            'Text-copy-source-md5', 'Text-copy-source-sha1', 'Text-content-length', 'Text-content-md5',
-            'Text-content-sha1', 'Prop-content-length', 'Content-length']
+             'Text-copy-source-md5', 'Text-copy-source-sha1', 'Text-content-length', 'Text-content-md5',
+             'Text-content-sha1', 'Prop-content-length', 'Content-length']
         )
         self.assertEqual(lump.get_header('Node-path'), 'a/b')
         self.assertEqual(lump.get_header('Node-action'), 'add')
-        self.assertEqual(lump.properties, { 'propa': 'value2', 'propb': 'valueb' } )
+        self.assertEqual(lump.properties, {'propa': 'value2', 'propb': 'valueb'})
         self._assertTin(lump, "y\n")
 
     def test_copy_in_dir(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
-        self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_Y_TO_A_B 
-        self.repo.tree_by_path_and_revision['x/y'] = { 2: [ 'x/y/', 'x/y/c1', 'x/y/c2' ] }
-        self.repo.files_by_name_and_revision['x/y/c1'] = { 2: "xxx\n\yy1\n" }
-        self.repo.files_by_name_and_revision['x/y/c2'] = { 2: "xxx\n\yy2\n" }
-        self.repo.properties_by_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
-        self.repo.properties_by_path_and_revision['x/y/c1'] = { 2: { 'prop2': 'value2' } }
-        self.repo.properties_by_path_and_revision['x/y/c2'] = { 2: { } }
+        self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_Y_TO_A_B
+        self.repo.tree_by_path_and_revision['x/y'] = {2: ['x/y/', 'x/y/c1', 'x/y/c2']}
+        self.repo.files_by_name_and_revision['x/y/c1'] = {2: "xxx\n\yy1\n"}
+        self.repo.files_by_name_and_revision['x/y/c2'] = {2: "xxx\n\yy2\n"}
+        self.repo.properties_by_path_and_revision['x/y'] = {2: {'prop1': 'value1'}}
+        self.repo.properties_by_path_and_revision['x/y/c1'] = {2: {'prop2': 'value2'}}
+        self.repo.properties_by_path_and_revision['x/y/c2'] = {2: {}}
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            [ 'get_recursively_from_source', 'dir', 'a/b', 'add', 'x/y', 2 ]
-        )
-        
+                         ['get_recursively_from_source', 'dir', 'a/b', 'add', 'x/y', 2]
+                         )
+
     def test_copy_to_path_above_from_boring(self):
         self.interesting_paths.mark_path_as_interesting('a/b/c1')
-        self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_Y_TO_A_B 
-        self.repo.tree_by_path_and_revision['x/y'] = { 2: [ 'x/y/', 'x/y/c1', 'x/y/c2' ] }
-        self.repo.files_by_name_and_revision['x/y/c1'] = { 2: "xxx\n\yy1\n" }
-        self.repo.files_by_name_and_revision['x/y/c2'] = { 2: "xxx\n\yy2\n" }
-        self.repo.properties_by_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
-        self.repo.properties_by_path_and_revision['x/y/c1'] = { 2: { 'prop2': 'value2' } }
-        self.repo.properties_by_path_and_revision['x/y/c2'] = { 2: { } }
+        self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_Y_TO_A_B
+        self.repo.tree_by_path_and_revision['x/y'] = {2: ['x/y/', 'x/y/c1', 'x/y/c2']}
+        self.repo.files_by_name_and_revision['x/y/c1'] = {2: "xxx\n\yy1\n"}
+        self.repo.files_by_name_and_revision['x/y/c2'] = {2: "xxx\n\yy2\n"}
+        self.repo.properties_by_path_and_revision['x/y'] = {2: {'prop1': 'value1'}}
+        self.repo.properties_by_path_and_revision['x/y/c1'] = {2: {'prop2': 'value2'}}
+        self.repo.properties_by_path_and_revision['x/y/c2'] = {2: {}}
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            ['get_recursively_from_source', 'file', 'a/b/c1', 'add', 'x/y/c1', 2]
-        )
+                         ['get_recursively_from_source', 'file', 'a/b/c1', 'add', 'x/y/c1', 2]
+                         )
 
     def test_copy_to_path_above_from_interesting(self):
         self.interesting_paths.mark_path_as_interesting('x/y')
         self.interesting_paths.mark_path_as_interesting('a/b/c1')
-        self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_Y_TO_A_B 
-        self.repo.tree_by_path_and_revision['x/y'] = { 2: [ 'x/y/', 'x/y/c1', 'x/y/c2' ] }
-        self.repo.files_by_name_and_revision['x/y/c1'] = { 2: "xxx\n\yy1\n" }
-        self.repo.files_by_name_and_revision['x/y/c2'] = { 2: "xxx\n\yy2\n" }
-        self.repo.properties_by_path_and_revision['x/y'] = { 2: { 'prop1': 'value1' } }
-        self.repo.properties_by_path_and_revision['x/y/c1'] = { 2: { 'prop2': 'value2' } }
-        self.repo.properties_by_path_and_revision['x/y/c2'] = { 2: { } }
+        self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_Y_TO_A_B
+        self.repo.tree_by_path_and_revision['x/y'] = {2: ['x/y/', 'x/y/c1', 'x/y/c2']}
+        self.repo.files_by_name_and_revision['x/y/c1'] = {2: "xxx\n\yy1\n"}
+        self.repo.files_by_name_and_revision['x/y/c2'] = {2: "xxx\n\yy2\n"}
+        self.repo.properties_by_path_and_revision['x/y'] = {2: {'prop1': 'value1'}}
+        self.repo.properties_by_path_and_revision['x/y/c1'] = {2: {'prop2': 'value2'}}
+        self.repo.properties_by_path_and_revision['x/y/c2'] = {2: {}}
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1],
-            [ 'get_path_from_target', 'file', 'a/b/c1', 'add', 'x/y/c1', 2 ]
-        )
+                         ['get_path_from_target', 'file', 'a/b/c1', 'add', 'x/y/c1', 2]
+                         )
 
     def test_copy_to_path_above_2_from_interesting(self):
         self.interesting_paths.mark_path_as_interesting('x/b')
         self.interesting_paths.mark_path_as_interesting('a/b')
         self.repo.dumps_by_revision[3] = DUMP_COPY_DIR_X_TO_A
-        self.repo.tree_by_path_and_revision['x'] = { 2: [ 'x/', 'x/b/', 'x/b/c1', 'x/b/c2' ] }
-        self.repo.tree_by_path_and_revision['x/b'] = { 2: [ 'x/b/', 'x/b/c1', 'x/b/c2' ] }
-        self.repo.files_by_name_and_revision['x/b/c1'] = { 2: "xxx\n\yy1\n" }
-        self.repo.files_by_name_and_revision['x/b/c2'] = { 2: "xxx\n\yy2\n" }
-        self.repo.properties_by_path_and_revision['x/b'] = { 2: { 'prop1': 'value1' } }
-        self.repo.properties_by_path_and_revision['x/b/c1'] = { 2: { 'prop2': 'value2' } }
-        self.repo.properties_by_path_and_revision['x/b/c2'] = { 2: { } }
+        self.repo.tree_by_path_and_revision['x'] = {2: ['x/', 'x/b/', 'x/b/c1', 'x/b/c2']}
+        self.repo.tree_by_path_and_revision['x/b'] = {2: ['x/b/', 'x/b/c1', 'x/b/c2']}
+        self.repo.files_by_name_and_revision['x/b/c1'] = {2: "xxx\n\yy1\n"}
+        self.repo.files_by_name_and_revision['x/b/c2'] = {2: "xxx\n\yy2\n"}
+        self.repo.properties_by_path_and_revision['x/b'] = {2: {'prop1': 'value1'}}
+        self.repo.properties_by_path_and_revision['x/b/c1'] = {2: {'prop2': 'value2'}}
+        self.repo.properties_by_path_and_revision['x/b/c2'] = {2: {}}
 
         self.dump_filter.process_revision(3, None)
         self._verfiy_revision_header()
         self.assertEqual(self.builder.call_history[1:], [
-            [ 'get_path_from_target', 'dir', 'a/b', 'add', 'x/b', 2 ]
-        ] )
+            ['get_path_from_target', 'dir', 'a/b', 'add', 'x/b', 2]
+        ])
 
     def test_delete_inside(self):
         self.interesting_paths.mark_path_as_interesting('a/b')
@@ -479,30 +479,30 @@ class TestDumpFilter(TestCase):
         lump = self.builder.call_history[1][1]
         self.assertEqual(
             lump.get_header_keys(),
-            [ 'Node-path', 'Node-action' ]
+            ['Node-path', 'Node-action']
         )
         self.assertEqual(lump.get_header('Node-path'), 'a/b')
         self.assertEqual(lump.get_header('Node-action'), 'delete')
-        self.assertEqual(lump.properties, { })
+        self.assertEqual(lump.properties, {})
         self.assertEqual(lump.content, None)
 
     def test_delete_over_existing(self):
         self.interesting_paths.mark_path_as_interesting('a/b/c')
         self.repo.dumps_by_revision[3] = DUMP_DELETE_FILE_A_B
-        self.repo.files_by_name_and_revision['a/b/c'] = { 2: "xxx\n\yyy\n" }
+        self.repo.files_by_name_and_revision['a/b/c'] = {2: "xxx\n\yyy\n"}
 
         self.dump_filter.process_revision(3, None)
 
         self.assertEqual(len(self.builder.call_history), 2)
         self._verfiy_revision_header()
-        self.assertEqual(self.builder.call_history[1], 
-            [ 'delete_path', 'a/b/c' ]
-        )
+        self.assertEqual(self.builder.call_history[1],
+                         ['delete_path', 'a/b/c']
+                         )
 
     def test_unsupported_dump_version(self):
         self.interesting_paths.mark_path_as_interesting('a/b/c')
         self.repo.dumps_by_revision[3] = DUMP_UNSUPPORTED_VERSION
-        self.repo.files_by_name_and_revision['a/b/c'] = { 2: "xxx\n\yyy\n" }
+        self.repo.files_by_name_and_revision['a/b/c'] = {2: "xxx\n\yyy\n"}
 
         self.assertRaises(UnsupportedDumpVersionException, self.dump_filter.process_revision, 3, None)
 
@@ -520,15 +520,15 @@ class TestDumpFilter(TestCase):
         self.repo.dumps_by_revision[3] = DUMP_REPLACE_FILE_WITH_NEW_CONTENT
 
         self.dump_filter.process_revision(3, None)
-        
+
         self._verfiy_revision_header()
 
-        self.assertEqual(self.builder.call_history[1][0], 'pass_lump' )
+        self.assertEqual(self.builder.call_history[1][0], 'pass_lump')
         lump = self.builder.call_history[1][1]
         self.assertEqual(
             lump.get_header_keys(),
-            [ 'Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
-            'Text-content-md5', 'Text-content-sha1', 'Content-length' ]
+            ['Node-path', 'Node-kind', 'Node-action', 'Text-content-length',
+             'Text-content-md5', 'Text-content-sha1', 'Content-length']
         )
         self.assertEqual(lump.get_header('Node-path'), 'a/bla')
         self.assertEqual(lump.get_header('Node-kind'), 'file')
@@ -540,15 +540,14 @@ class TestDumpFilter(TestCase):
         lump = self.builder.call_history[0][1]
         self.assertEqual(
             lump.get_header_keys(),
-            [ 'Revision-number', 'Prop-content-length', 'Content-length' ]
+            ['Revision-number', 'Prop-content-length', 'Content-length']
         )
         self.assertEqual(lump.get_header('Revision-number'), '3')
         self.assertEqual(
             lump.properties,
-            { 'svn:log': "Bl\n", 'svn:author': 'wilhelmh', 'svn:date': '2011-09-04T10:27:15.088237Z' }
+            {'svn:log': "Bl\n", 'svn:author': 'wilhelmh', 'svn:date': '2011-09-04T10:27:15.088237Z'}
         )
 
     def _assertTin(self, lump, expected_content):
         # Hack: Works only in conjunction with LumpBuilderMock
         self.assertEqual(lump.content, expected_content)
- 

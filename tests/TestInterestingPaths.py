@@ -1,7 +1,7 @@
-
 from unittest import TestCase
 
 from svnfiltereddump import InterestingPaths
+
 
 class InterestingPathsTests(TestCase):
 
@@ -13,10 +13,10 @@ class InterestingPathsTests(TestCase):
         self.assertTrue(interesting_path.is_interesting('b'))
 
         dirs = sorted(interesting_path.get_interesting_sub_directories('a'))
-        self.assertEqual(dirs, [ 'a' ])
+        self.assertEqual(dirs, ['a'])
 
         dirs = sorted(interesting_path.get_interesting_sub_directories(''))
-        self.assertEqual(dirs, [ '' ])
+        self.assertEqual(dirs, [''])
 
     def test_simple_include(self):
         interesting_path = InterestingPaths()
@@ -45,9 +45,9 @@ class InterestingPathsTests(TestCase):
         interesting_path.mark_path_as_interesting('a/b/cb')
         interesting_path.mark_path_as_boring('a/b/ca/x')
         interesting_path.mark_path_as_boring('a/y')
-        
+
         dirs = sorted(interesting_path.get_interesting_sub_directories('a/b'))
-        self.assertEqual(dirs, [ 'a/b/ca', 'a/b/cb' ])
+        self.assertEqual(dirs, ['a/b/ca', 'a/b/cb'])
 
         self.assertEqual([], interesting_path.get_interesting_sub_directories("a/b/c/x"))
 
@@ -57,4 +57,3 @@ class InterestingPathsTests(TestCase):
 
         self.assertTrue(interesting_path.is_interesting('a/b'))
         self.assertTrue(interesting_path.is_interesting('a/b/'))
-        
